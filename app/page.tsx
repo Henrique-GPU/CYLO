@@ -98,8 +98,8 @@ export default async function RootPage() {
       <div className="relative z-10 border-y border-white/6 bg-white/2">
         <div className="max-w-[1280px] mx-auto px-6 sm:px-10 py-5 flex flex-wrap items-center justify-center gap-8 sm:gap-12">
           {([
-            { value: '10+', label: 'Lojas ativas' },
-            { value: 'R$ 300k', label: 'Gerenciados' },
+            { value: '10+', label: 'Lojas ativas', blue: false },
+            { value: 'R$ 300k', label: 'Gerenciados', blue: false },
             { value: 'White Label', label: 'Por loja', blue: true },
             { value: 'Por convite', label: 'Acesso exclusivo', blue: true },
           ] as const).map(({ value, label, blue }) => (
