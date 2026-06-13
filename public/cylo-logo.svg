@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="58%">
+      <stop offset="0%" stop-color="#12151e"/>
+      <stop offset="100%" stop-color="#07090d"/>
+    </radialGradient>
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4d9fff" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#2563eb" stop-opacity="0.7"/>
+    </linearGradient>
+    <linearGradient id="cGrad" x1="140" y1="30" x2="40" y2="170" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#93c5fd"/>
+      <stop offset="30%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1e40af"/>
+    </linearGradient>
+    <linearGradient id="linesGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#60a5fa"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <circle cx="100" cy="100" r="99" fill="url(#bg)"/>
+
+  <!-- Outer subtle glow ring -->
+  <circle cx="100" cy="100" r="97.5" fill="none" stroke="#3b82f6" stroke-width="0.6" opacity="0.25"/>
+  <!-- Main ring -->
+  <circle cx="100" cy="100" r="95.5" fill="none" stroke="url(#ringGrad)" stroke-width="3.5"/>
+
+  <!-- C shape: radius=56, opening ~100° to the right -->
+  <!-- top: angle -50° from 3-o'clock → (136, 57) -->
+  <!-- bot: angle +50° from 3-o'clock → (136, 143) -->
+  <path
+    d="M 136 57 A 56 56 0 1 0 136 143"
+    fill="none"
+    stroke="url(#cGrad)"
+    stroke-width="23"
+    stroke-linecap="round"
+    filter="url(#glow)"
+  />
+
+  <!-- iPhone outline, centered at ~(96, 100) -->
+  <rect x="80" y="68" width="31" height="64" rx="5.5" ry="5.5"
+        fill="none" stroke="white" stroke-width="3.5" opacity="0.95"/>
+  <!-- speaker bar -->
+  <rect x="91" y="74.5" width="13" height="2.8" rx="1.4" fill="white" opacity="0.38"/>
+
+  <!-- Speed lines from phone right edge into C gap -->
+  <line x1="114" y1="88"  x2="146" y2="88"  stroke="url(#linesGrad)" stroke-width="5.5" stroke-linecap="round"/>
+  <line x1="114" y1="100" x2="141" y2="100" stroke="url(#linesGrad)" stroke-width="4.2" stroke-linecap="round"/>
+  <line x1="114" y1="112" x2="136" y2="112" stroke="url(#linesGrad)" stroke-width="3"   stroke-linecap="round"/>
+</svg>

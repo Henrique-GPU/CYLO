@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #4f7eff;
+  --color-secondary: #0e1018;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: #0e1018;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
