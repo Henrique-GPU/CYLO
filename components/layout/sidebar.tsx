@@ -47,7 +47,7 @@ export default function Sidebar({ variant, loja, usuario }: SidebarProps) {
     : daysUntil(loja?.proximo_vencimento)
 
   return (
-    <aside className="w-56 flex flex-col h-full border-r border-white/5 flex-shrink-0" style={{ background: '#0e1018' }}>
+    <aside className="hidden lg:flex w-56 flex-col h-full border-r border-white/5 flex-shrink-0" style={{ background: '#0e1018' }}>
 
       {/* Branding header */}
       <div className="px-4 pt-4 pb-3 border-b border-white/5">

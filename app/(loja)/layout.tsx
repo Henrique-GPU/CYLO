@@ -1,4 +1,5 @@
 import Sidebar from '@/components/layout/sidebar'
+import BottomNav from '@/components/layout/bottom-nav'
 import { createClient } from '@/lib/supabase/server'
 import type { Perfil } from '@/types'
 
@@ -34,7 +35,8 @@ export default async function LojaLayout({ children }: { children: React.ReactNo
   return (
     <div className="flex h-screen bg-[#0e1018]">
       <Sidebar variant={perfil} loja={loja} usuario={usuario} />
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">{children}</main>
+      <BottomNav variant={perfil} />
     </div>
   )
 }
