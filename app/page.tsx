@@ -106,7 +106,7 @@ export default async function RootPage() {
             { value: '10+', label: 'Lojas ativas', blue: false },
             { value: 'R$ 300k', label: 'Gerenciados', blue: false },
             { value: 'White Label', label: 'Por loja', blue: true },
-            { value: 'Por convite', label: 'Acesso exclusivo', blue: true },
+            { value: '15 dias', label: 'Trial grátis', blue: true },
           ] as const).map(({ value, label, blue }) => (
             <div key={label} className="flex flex-col items-center gap-1">
               <span className={`text-lg font-black leading-none ${blue ? 'text-[#4f7eff]' : 'text-white'}`}>{value}</span>

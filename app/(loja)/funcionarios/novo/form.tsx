@@ -22,7 +22,6 @@ export default function NovoFuncionarioForm() {
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [credenciais, setCredenciais] = useState<Credenciais | null>(null)
-  const [perfil, setPerfil] = useState('vendedor')
   const [copiado, setCopiado] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -30,7 +29,6 @@ export default function NovoFuncionarioForm() {
     setSalvando(true)
     setErro(null)
     const fd = new FormData(e.currentTarget)
-    fd.set('perfil', perfil)
     const res = await criarFuncionario(fd)
     setSalvando(false)
     if ('error' in res) { setErro(res.error ?? 'Erro desconhecido'); return }
@@ -95,19 +93,9 @@ export default function NovoFuncionarioForm() {
 
           <div>
             <label className="label">Perfil</label>
-            <div className="flex gap-2">
-              {[
-                { key: 'vendedor', label: '🛍 Vendedor', desc: 'Acesso a vendas e estoque' },
-                { key: 'loja_admin', label: '⚙ Admin', desc: 'Acesso total à loja' },
-              ].map(p => (
-                <button key={p.key} type="button" onClick={() => setPerfil(p.key)}
-                  className={`flex-1 py-2 px-3 rounded-xl border text-left transition-colors ${
-                    perfil === p.key ? 'border-[#4f7eff] bg-[#4f7eff]/10' : 'border-white/10 hover:border-white/20'
-                  }`}>
-                  <p className="text-sm font-semibold text-white">{p.label}</p>
-                  <p className="text-[10px] text-white/30">{p.desc}</p>
-                </button>
-              ))}
+            <div className="py-2.5 px-3 bg-white/5 border border-white/10 rounded-xl">
+              <p className="text-sm font-semibold text-white">🛍 Vendedor</p>
+              <p className="text-[10px] text-white/30">Acesso a vendas e estoque</p>
             </div>
           </div>
         </div>

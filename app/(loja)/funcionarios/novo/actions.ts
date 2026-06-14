@@ -29,7 +29,7 @@ export async function criarFuncionario(formData: FormData) {
 
   const nome = formData.get('nome') as string
   const email = formData.get('email') as string
-  const perfil = (formData.get('perfil') as string) || 'vendedor'
+  const perfil = 'vendedor' // admin só pode criar vendedores
   const comissaoPct = parseFloat(formData.get('comissao_pct') as string) || 0
   const metaMensalRaw = formData.get('meta_mensal') as string
   const metaMensal = metaMensalRaw ? parseFloat(metaMensalRaw) : null
