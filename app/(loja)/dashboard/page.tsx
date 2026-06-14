@@ -107,7 +107,7 @@ async function CEODashboard() {
     <div className="p-6 max-w-[1300px]">
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-xl font-black tracking-tight text-white">iStore Manager</h1>
+          <h1 className="text-xl font-black tracking-tight text-white">Cylo</h1>
           <p className="text-[11px] text-white/30 mt-0.5">Painel do CEO · Gestão da Plataforma</p>
         </div>
         <Link
