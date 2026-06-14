@@ -68,8 +68,30 @@ export default async function BloqueadoPage() {
           </p>
         )}
 
+        {/* Card de preço */}
+        <div className="mt-6 bg-white/4 border border-white/10 rounded-2xl p-5 text-left">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Plano Cylo</span>
+            <span className="text-[10px] bg-[#4f7eff]/15 text-[#4f7eff] font-bold px-2.5 py-1 rounded-full">Mensal</span>
+          </div>
+          <div className="flex items-end gap-1 mb-4">
+            <span className="text-white/40 text-sm font-medium">R$</span>
+            <span className="text-4xl font-black text-white leading-none">59</span>
+            <span className="text-white/60 text-lg font-bold leading-none">,99</span>
+            <span className="text-white/30 text-sm mb-0.5">/mês</span>
+          </div>
+          <div className="space-y-1.5">
+            {['Estoque ilimitado por IMEI', 'Múltiplos vendedores', 'Recibos e orçamentos', 'Relatórios e DRE', 'Suporte direto via WhatsApp'].map(f => (
+              <div key={f} className="flex items-center gap-2">
+                <span className="text-emerald-400 text-xs">✓</span>
+                <span className="text-white/50 text-xs">{f}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* CTA principal — WhatsApp */}
-        <div className="mt-8 space-y-3">
+        <div className="mt-4 space-y-3">
           <a
             href={waLink}
             target="_blank"
