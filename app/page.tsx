@@ -53,9 +53,9 @@ export default async function RootPage() {
         {/* Copy */}
         <div className="flex-1 max-w-[560px]">
           {/* Pill badge */}
-          <div className="inline-flex items-center gap-2 bg-[#4f7eff]/10 border border-[#4f7eff]/25 rounded-full px-4 py-1.5 mb-7">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#4f7eff] animate-pulse" />
-            <span className="text-[11px] font-bold text-[#4f7eff] uppercase tracking-wider">Acesso por convite</span>
+          <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-1.5 mb-7">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">14 dias grátis · Sem cartão</span>
           </div>
 
           <h1 className="text-[42px] sm:text-[52px] font-black tracking-tight leading-[1.08] mb-6">
@@ -69,17 +69,22 @@ export default async function RootPage() {
             tudo em uma plataforma white-label, exclusiva para lojas selecionadas.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <Link
+              href="/cadastro"
+              className="inline-flex items-center gap-2 bg-[#4f7eff] hover:bg-[#3d6eef] text-white font-bold px-7 py-3.5 rounded-2xl transition-colors text-sm"
+            >
+              Criar conta grátis →
+            </Link>
             <a
               href={WA_LINK}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2.5 bg-[#4f7eff] hover:bg-[#3d6eef] text-white font-bold px-7 py-3.5 rounded-2xl transition-colors text-sm"
+              className="inline-flex items-center gap-2 border border-white/15 hover:border-white/30 text-white/60 hover:text-white font-semibold px-5 py-3.5 rounded-2xl transition-colors text-sm"
             >
               <WaIcon />
-              Solicitar Acesso
+              Falar com o fundador
             </a>
-            <span className="text-white/25 text-xs">Resposta geralmente em menos de 24h</span>
           </div>
         </div>
 
@@ -174,27 +179,35 @@ export default async function RootPage() {
               </div>
 
               <h2 className="text-3xl font-black tracking-tight mb-4">
-                Selecionamos nossas<br />
-                <span className="text-[#4f7eff]">lojas com cuidado.</span>
+                Comece grátis.<br />
+                <span className="text-[#4f7eff]">14 dias sem compromisso.</span>
               </h2>
 
               <p className="text-white/40 text-sm leading-relaxed mb-8 max-w-[420px] mx-auto">
-                O Cylo não tem cadastro aberto. Cada loja parceira é conhecida pessoalmente pelo fundador.
-                Se você está aqui, provavelmente já foi indicada por alguém.
+                Crie sua conta agora e explore tudo. Sem cartão de crédito.
+                Se quiser conversar antes, é só chamar no WhatsApp.
               </p>
 
-              <a
-                href={WA_LINK}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2.5 bg-[#4f7eff] hover:bg-[#3d6eef] text-white font-bold px-8 py-4 rounded-2xl transition-colors text-sm"
-              >
-                <WaIcon />
-                Conversar com o fundador
-              </a>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <Link
+                  href="/cadastro"
+                  className="inline-flex items-center gap-2 bg-[#4f7eff] hover:bg-[#3d6eef] text-white font-bold px-8 py-4 rounded-2xl transition-colors text-sm"
+                >
+                  Criar conta grátis →
+                </Link>
+                <a
+                  href={WA_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 border border-white/15 hover:border-white/25 text-white/50 hover:text-white/80 font-semibold px-6 py-4 rounded-2xl transition-colors text-sm"
+                >
+                  <WaIcon />
+                  Falar antes
+                </a>
+              </div>
 
               <p className="text-white/20 text-[11px] mt-5">
-                Nenhum formulário. Nenhuma promessa. Só uma conversa.
+                Sem cartão · Sem contrato · Cancele quando quiser
               </p>
             </div>
           </div>
