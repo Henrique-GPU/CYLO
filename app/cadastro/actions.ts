@@ -37,7 +37,7 @@ export async function cadastrar(formData: FormData): Promise<{ error: string } |
       cor_primaria: '#4f7eff',
       cor_secundaria: '#0e1018',
       status_saas: 'trial',
-      valor_mensal: 99.90,
+      valor_mensal: 59.90,
       data_inicio_trial: agora.toISOString().split('T')[0],
       data_fim_trial: fimTrial.toISOString().split('T')[0],
       proximo_vencimento: fimTrial.toISOString().split('T')[0],
