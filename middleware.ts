@@ -27,13 +27,13 @@ export async function middleware(request: NextRequest) {
     .eq('id', user.id)
     .single<{ perfil: string; loja_id: string | null }>()
 
-  // CEO e vendedor: acesso livre
-  if (!usuario || usuario.perfil === 'ceo' || usuario.perfil === 'vendedor') {
+  // CEO: acesso total, nunca bloqueado
+  if (!usuario || usuario.perfil === 'ceo') {
     return supabaseResponse
   }
 
-  // loja_admin: verifica status_saas da loja
-  if (usuario.perfil === 'loja_admin' && usuario.loja_id) {
+  // loja_admin e vendedor: ambos bloqueados junto com a loja
+  if (usuario.loja_id) {
     const { data: loja } = await supabase
       .from('lojas')
       .select('status_saas, data_fim_trial')
@@ -43,8 +43,6 @@ export async function middleware(request: NextRequest) {
     if (loja) {
       const bloqueado = loja.status_saas === 'bloqueado'
       const vencido = loja.status_saas === 'vencido'
-
-      // Trial: verifica se expirou (Supabase pode não atualizar automático)
       let trialExpirado = false
       if (loja.status_saas === 'trial' && loja.data_fim_trial) {
         trialExpirado = new Date(loja.data_fim_trial) < new Date()

@@ -41,7 +41,7 @@ export default async function OnboardingPage() {
         </div>
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[11px] text-white/30">Trial ativo · 14 dias</span>
+          <span className="text-[11px] text-white/30">Trial ativo · 15 dias</span>
         </div>
       </nav>
 

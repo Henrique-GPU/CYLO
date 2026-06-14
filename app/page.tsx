@@ -4,7 +4,7 @@ import Link from 'next/link'
 import MockupAnimado from '@/components/login/mockup-animado'
 
 // Atualize com o número do WhatsApp do fundador (DDI + DDD + número, sem espaços ou símbolos)
-const FOUNDER_WA = '5511999999999'
+const FOUNDER_WA = '5511932652082'
 const WA_MSG = encodeURIComponent('Olá! Vi o Cylo e quero saber mais sobre como minha loja pode ter acesso.')
 const WA_LINK = `https://wa.me/${FOUNDER_WA}?text=${WA_MSG}`
 
@@ -55,7 +55,7 @@ export default async function RootPage() {
           {/* Pill badge */}
           <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-1.5 mb-7">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">14 dias grátis · Sem cartão</span>
+            <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">15 dias grátis · Sem cartão</span>
           </div>
 
           <h1 className="text-[42px] sm:text-[52px] font-black tracking-tight leading-[1.08] mb-6">
@@ -180,7 +180,7 @@ export default async function RootPage() {
 
               <h2 className="text-3xl font-black tracking-tight mb-4">
                 Comece grátis.<br />
-                <span className="text-[#4f7eff]">14 dias sem compromisso.</span>
+                <span className="text-[#4f7eff]">15 dias sem compromisso.</span>
               </h2>
 
               <p className="text-white/40 text-sm leading-relaxed mb-8 max-w-[420px] mx-auto">

@@ -26,7 +26,7 @@ export async function cadastrar(formData: FormData): Promise<{ error: string } |
 
   const agora = new Date()
   const fimTrial = new Date(agora)
-  fimTrial.setDate(fimTrial.getDate() + 14)
+  fimTrial.setDate(fimTrial.getDate() + 15)
 
   // 1. Criar loja em trial
   const { data: loja, error: erroLoja } = await admin

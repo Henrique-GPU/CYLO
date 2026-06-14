@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
-const FOUNDER_WA = '5511999999999'
+const FOUNDER_WA = '5511932652082'
 const WA_MSG = encodeURIComponent('Olá! Minha conta no Cylo está bloqueada/vencida. Gostaria de renovar.')
 const WA_LINK = `https://wa.me/${FOUNDER_WA}?text=${WA_MSG}`
 
@@ -41,7 +41,7 @@ export default async function BloqueadoPage() {
           {isBloqueado
             ? 'Sua conta foi bloqueada. Entre em contato para regularizar o acesso.'
             : isTrialExpirado
-            ? 'Seu trial de 14 dias chegou ao fim. Para continuar usando o Cylo, fale com o responsável.'
+            ? 'Seu trial de 15 dias chegou ao fim. Para continuar usando o Cylo, fale com o responsável.'
             : 'Seu acesso venceu. Renove para continuar usando o Cylo.'}
         </p>
 
