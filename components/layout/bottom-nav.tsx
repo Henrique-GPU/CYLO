@@ -14,7 +14,7 @@ const ADMIN_ITEMS = [
   { href: '/dashboard', icon: 'LayoutGrid', label: 'Home' },
   { href: '/estoque', icon: 'Package', label: 'Estoque' },
   { href: '/nova-venda', icon: 'PlusCircle', label: 'Vender', primary: true },
-  { href: '/vendas', icon: 'Receipt', label: 'Vendas' },
+  { href: '/assistencia', icon: 'Wrench', label: 'Assist.' },
   { href: '/configuracoes', icon: 'Settings', label: 'Config' },
 ]
 
@@ -22,8 +22,8 @@ const VENDEDOR_ITEMS = [
   { href: '/minha-area', icon: 'User', label: 'Início' },
   { href: '/estoque', icon: 'Package', label: 'Estoque' },
   { href: '/nova-venda', icon: 'PlusCircle', label: 'Vender', primary: true },
+  { href: '/assistencia', icon: 'Wrench', label: 'Assist.' },
   { href: '/meus-orcamentos', icon: 'FileText', label: 'Orçamentos' },
-  { href: '/meus-recibos', icon: 'FileCheck', label: 'Recibos' },
 ]
 
 function NavIcon({ name, size }: { name: string; size: number }) {
