@@ -5,7 +5,7 @@ import { updateSession } from '@/lib/supabase/middleware'
 const PUBLIC_PATHS = ['/', '/login', '/cadastro', '/onboarding']
 
 // Rotas que admins bloqueados/vencidos ainda podem acessar
-const ALLOWED_WHEN_BLOCKED = ['/configuracoes', '/login', '/cadastro']
+const ALLOWED_WHEN_BLOCKED = ['/bloqueado', '/configuracoes', '/login', '/cadastro', '/api/auth']
 
 export async function proxy(request: NextRequest) {
   const { supabaseResponse, user, supabase } = await updateSession(request)
