@@ -1,5 +1,6 @@
 import LoginForm from '@/components/login/login-form'
 import MockupAnimado from '@/components/login/mockup-animado'
+import Link from 'next/link'
 
 export default function LoginPage() {
   return (
@@ -46,7 +47,14 @@ export default function LoginPage() {
 
           <LoginForm />
 
-          <p className="text-center text-[10px] text-white/15 mt-10 uppercase tracking-widest">
+          <p className="text-center text-sm text-white/30 mt-8">
+            Ainda não tem conta?{' '}
+            <Link href="/cadastro" className="text-[#4f7eff] hover:text-[#7a9fff] font-semibold transition-colors">
+              Criar conta grátis
+            </Link>
+          </p>
+
+          <p className="text-center text-[10px] text-white/15 mt-6 uppercase tracking-widest">
             Cylo · Gestão para lojas de iPhone
           </p>
         </div>
