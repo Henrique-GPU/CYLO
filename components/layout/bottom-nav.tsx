@@ -14,7 +14,7 @@ const ADMIN_ITEMS = [
   { href: '/dashboard', icon: 'LayoutGrid', label: 'Home' },
   { href: '/estoque', icon: 'Package', label: 'Estoque' },
   { href: '/nova-venda', icon: 'PlusCircle', label: 'Vender', primary: true },
-  { href: '/assistencia', icon: 'Wrench', label: 'Assist.' },
+  { href: '/orcamentos', icon: 'FileText', label: 'Orçamentos' },
   { href: '/configuracoes', icon: 'Settings', label: 'Config' },
 ]
 
