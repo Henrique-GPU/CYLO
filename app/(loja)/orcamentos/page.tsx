@@ -36,7 +36,7 @@ export default async function OrcamentosPage() {
   const totalEmAberto = orcamentos.reduce((s: number, o: any) => s + (o.valor_total ?? 0), 0)
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-4 sm:p-8 max-w-6xl">
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-white">Orçamentos</h1>
         <p className="text-sm text-white/40 mt-0.5">
