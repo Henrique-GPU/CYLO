@@ -25,7 +25,7 @@ export default async function EstoquePage() {
     .order('criado_em', { ascending: false })
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-4 sm:p-8 max-w-6xl">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-white">Estoque</h1>

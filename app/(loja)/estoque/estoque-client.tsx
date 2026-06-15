@@ -114,8 +114,8 @@ export default function EstoqueClient({ aparelhos, isAdmin }: { aparelhos: any[]
               )}
             </div>
           ) : (
-            <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden mb-4">
-              <table className="w-full">
+            <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden mb-4 overflow-x-auto">
+              <table className="w-full min-w-[480px]">
                 <thead>
                   <tr className="border-b border-white/5">
                     <th className="text-left text-xs text-white/30 font-medium px-5 py-3">Modelo</th>
@@ -214,8 +214,8 @@ export default function EstoqueClient({ aparelhos, isAdmin }: { aparelhos: any[]
       {/* ── Tab: Usados ──────────────────────────────────────────────── */}
       {tab === 'usados' && (
         usados.length === 0 ? empty : (
-          <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
-            <table className="w-full">
+          <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden overflow-x-auto">
+            <table className="w-full min-w-[600px]">
               <thead>
                 <tr className="border-b border-white/5">
                   <th className="text-left text-xs text-white/30 font-medium px-5 py-3">IMEI</th>

@@ -1746,7 +1746,7 @@ export default function VendaWizard({
       </div>
 
       {/* ── Right: summary panel ── */}
-      <div className="w-64 border-l border-white/5 p-4 flex flex-col gap-3 overflow-y-auto flex-shrink-0">
+      <div className="hidden lg:flex w-64 border-l border-white/5 p-4 flex-col gap-3 overflow-y-auto flex-shrink-0">
         <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Resumo</p>
 
         <div className="space-y-2 text-xs">

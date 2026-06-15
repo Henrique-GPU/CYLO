@@ -304,7 +304,7 @@ async function AdminDashboard({ lojaId }: { lojaId: string }) {
     <div className="p-6 max-w-[1400px]">
 
       {/* LINHA 1: Saúde + 4 KPIs */}
-      <div className="grid gap-3.5 mb-3.5" style={{ gridTemplateColumns: '260px 1fr' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-3.5 mb-3.5">
         <div className="rounded-2xl p-5 flex flex-col justify-between min-h-[120px]"
           style={{ background: saude.bg, border: `1px solid ${saude.border}` }}>
           <div>
@@ -319,7 +319,7 @@ async function AdminDashboard({ lojaId }: { lojaId: string }) {
           </p>
         </div>
 
-        <div className="grid grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
           <KpiBox
             icon="💰" label="Faturamento" value={fmt(fat)} valueColor="#34d399"
             sub={fatDiff !== null
@@ -342,8 +342,8 @@ async function AdminDashboard({ lojaId }: { lojaId: string }) {
       </div>
 
       {/* LINHA 2: Estoque KPIs */}
-      <div className="grid gap-2.5 mb-3.5" style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr' }}>
-        <div className="bg-white/5 border border-white/8 rounded-2xl p-4"
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2.5 mb-3.5">
+        <div className="col-span-2 lg:col-span-1 bg-white/5 border border-white/8 rounded-2xl p-4"
           style={{ background: 'linear-gradient(135deg,rgba(79,126,255,.1),rgba(79,126,255,.03))', borderColor: 'rgba(79,126,255,.2)' }}>
           <div className="flex items-center gap-1.5 mb-2">
             <span>📦</span>
@@ -372,7 +372,7 @@ async function AdminDashboard({ lojaId }: { lojaId: string }) {
       )}
 
       {/* LINHA 3: Últimas vendas + Melhor vendedor + Top modelos */}
-      <div className="flex gap-3.5 items-start">
+      <div className="flex flex-col lg:flex-row gap-3.5 items-start">
 
         {/* Últimas vendas */}
         <div className="flex-[2] bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
