@@ -2,8 +2,9 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.cyloapp.com.br'),
   title: 'Cylo — Gestão para lojas de iPhone',
-  description: 'Controle vendas, estoque por IMEI, trocas, comissões e relatórios em uma única plataforma.',
+  description: 'Controle vendas, estoque por IMEI, trocas, comissões e relatórios em uma única plataforma. Sistema completo para lojas de iPhone.',
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
@@ -13,6 +14,19 @@ export const metadata: Metadata = {
   icons: {
     icon: '/cylo-logo.svg',
     apple: '/cylo-logo.svg',
+  },
+  openGraph: {
+    title: 'Cylo — Gestão para lojas de iPhone',
+    description: 'Controle vendas, estoque por IMEI, trocas, comissões e relatórios em uma única plataforma.',
+    url: 'https://www.cyloapp.com.br',
+    siteName: 'Cylo',
+    locale: 'pt_BR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Cylo — Gestão para lojas de iPhone',
+    description: 'Controle vendas, estoque por IMEI, trocas, comissões e relatórios em uma única plataforma.',
   },
 }
 
