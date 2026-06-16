@@ -179,7 +179,7 @@ export default function MockupAnimado() {
           <span className="text-white font-black text-2xl tracking-tight">CYLO</span>
         </div>
         <p className="text-[26px] font-black text-white leading-snug mb-3">
-          A plataforma que<br />lojas de iPhone<br />sérias usam.
+          A plataforma pra loja de iPhone que leva o negócio a sério.
         </p>
         <p className="text-sm text-white/40 leading-relaxed mb-5">
           Vendas, estoque por IMEI, trocas, comissões e relatórios — white-label para cada loja.

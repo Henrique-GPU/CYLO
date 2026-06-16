@@ -10,17 +10,14 @@ function iniciais(nome: string): string {
 
 export async function cadastrar(formData: FormData): Promise<{ error: string } | never> {
   const nomeLoja = (formData.get('nome_loja') as string)?.trim()
-  const nomeAdmin = (formData.get('nome') as string)?.trim()
   const email = (formData.get('email') as string)?.trim().toLowerCase()
   const senha = formData.get('senha') as string
-  const confirmaSenha = formData.get('confirma_senha') as string
+  const nomeAdmin = email?.split('@')[0] ?? nomeLoja
 
-  if (!nomeLoja || !nomeAdmin || !email || !senha)
+  if (!nomeLoja || !email || !senha)
     return { error: 'Preencha todos os campos obrigatórios.' }
   if (senha.length < 8)
     return { error: 'A senha deve ter no mínimo 8 caracteres.' }
-  if (senha !== confirmaSenha)
-    return { error: 'As senhas não coincidem.' }
 
   const admin = createAdminClient()
 
@@ -83,5 +80,5 @@ export async function cadastrar(formData: FormData): Promise<{ error: string } |
   const supabase = await createClient()
   await supabase.auth.signInWithPassword({ email, password: senha })
 
-  redirect('/onboarding')
+  redirect('/dashboard')
 }

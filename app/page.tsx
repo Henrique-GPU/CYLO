@@ -239,7 +239,7 @@ export default async function RootPage() {
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <img src="/cylo-logo.svg" alt="Cylo" className="w-5 h-5 opacity-40" />
-            <span className="text-sm text-gray-400">© {new Date().getFullYear()} Cylo · Para lojas de iPhone</span>
+            <span className="text-sm text-gray-400">© {new Date().getFullYear()} CYLO · Para lojas de iPhone</span>
           </div>
           <div className="flex items-center gap-6">
             <a

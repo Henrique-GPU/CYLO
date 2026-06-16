@@ -29,41 +29,30 @@ export default function CadastroPage() {
         <div className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-purple-600/8 rounded-full blur-[100px]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-md">
+      <div className="relative z-10 w-full max-w-sm">
 
         {/* Logo */}
         <div className="flex items-center gap-3 mb-10">
-          <img src="/cylo-logo.svg" alt="Cylo" className="w-9 h-9" />
+          <img src="/cylo-logo.svg" alt="CYLO" className="w-9 h-9" />
           <span className="text-white font-black text-xl tracking-tight">CYLO</span>
         </div>
 
         <div className="mb-7">
           <h1 className="text-2xl font-black text-white mb-1.5">Criar sua conta</h1>
-          <p className="text-sm text-white/40">14 dias grátis · Sem cartão de crédito</p>
+          <p className="text-sm text-white/40">15 dias grátis · Sem cartão de crédito</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
           <div>
             <label className="block text-[10px] font-semibold text-white/40 uppercase tracking-wider mb-1.5">
-              Nome da sua loja
+              Nome da loja
             </label>
             <input
               name="nome_loja"
               required
               placeholder="Ex: iPhone Store SP"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 outline-none focus:border-[#4f7eff] transition-colors"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-semibold text-white/40 uppercase tracking-wider mb-1.5">
-              Seu nome
-            </label>
-            <input
-              name="nome"
-              required
-              placeholder="Nome completo"
+              autoComplete="organization"
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 outline-none focus:border-[#4f7eff] transition-colors"
             />
           </div>
@@ -77,36 +66,24 @@ export default function CadastroPage() {
               type="email"
               required
               placeholder="seu@email.com"
+              autoComplete="email"
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 outline-none focus:border-[#4f7eff] transition-colors"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[10px] font-semibold text-white/40 uppercase tracking-wider mb-1.5">
-                Senha
-              </label>
-              <input
-                name="senha"
-                type="password"
-                required
-                minLength={8}
-                placeholder="Mín. 8 caracteres"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 outline-none focus:border-[#4f7eff] transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-semibold text-white/40 uppercase tracking-wider mb-1.5">
-                Confirmar senha
-              </label>
-              <input
-                name="confirma_senha"
-                type="password"
-                required
-                placeholder="Repita a senha"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 outline-none focus:border-[#4f7eff] transition-colors"
-              />
-            </div>
+          <div>
+            <label className="block text-[10px] font-semibold text-white/40 uppercase tracking-wider mb-1.5">
+              Senha
+            </label>
+            <input
+              name="senha"
+              type="password"
+              required
+              minLength={8}
+              placeholder="Mínimo 8 caracteres"
+              autoComplete="new-password"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 outline-none focus:border-[#4f7eff] transition-colors"
+            />
           </div>
 
           {erro && (
@@ -118,17 +95,17 @@ export default function CadastroPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 bg-[#4f7eff] hover:bg-[#3d6eef] text-white font-bold rounded-xl transition-colors disabled:opacity-50 text-sm"
+            className="w-full py-3.5 bg-[#4f7eff] hover:bg-[#3d6eef] text-white font-bold rounded-xl transition-colors disabled:opacity-50 text-sm mt-2"
           >
-            {loading ? 'Criando conta...' : 'Criar conta grátis'}
+            {loading ? 'Criando conta...' : 'Começar grátis →'}
           </button>
         </form>
 
         <div className="mt-6 text-center space-y-2">
-          <p className="text-xs text-white/25">
-            Ao criar uma conta você concorda com os termos de uso.
+          <p className="text-xs text-white/20">
+            Sem cartão · Sem fidelidade · Cancela quando quiser
           </p>
-          <p className="text-sm text-white/40">
+          <p className="text-sm text-white/40 mt-3">
             Já tem conta?{' '}
             <Link href="/login" className="text-[#4f7eff] hover:underline font-medium">
               Entrar
