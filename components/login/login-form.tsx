@@ -27,6 +27,9 @@ export default function LoginForm() {
       return
     }
 
+    // Atualiza último acesso da loja (fire-and-forget)
+    fetch('/api/auth/track-login', { method: 'POST' }).catch(() => {})
+
     router.push('/')
     router.refresh()
   }

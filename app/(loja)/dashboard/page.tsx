@@ -65,7 +65,7 @@ async function CEODashboard() {
   const supabase = await createClient()
   const { data: lojas } = await supabase
     .from('lojas')
-    .select('id, nome, responsavel, cor_primaria, status_saas, valor_mensal, data_fim_trial, proximo_vencimento, ultimo_acesso, criada_em')
+    .select('id, nome, responsavel, cor_primaria, status_saas, valor_mensal, data_fim_trial, proximo_vencimento, ultimo_acesso, criada_em, whatsapp, telefone')
     .order('criada_em', { ascending: false })
 
   const total = lojas?.length ?? 0
@@ -147,6 +147,11 @@ async function CEODashboard() {
           const ds = daysSince(l.ultimo_acesso ? l.ultimo_acesso.split('T')[0] : null)
           const acessoColor = ds === null ? '#4a5070' : ds === 0 ? '#34d399' : ds <= 3 ? '#34d399' : ds <= 15 ? '#fbbf24' : '#f87171'
           const acessoLabel = ds === null ? 'Nunca' : ds === 0 ? 'Hoje' : `${ds}d atrás`
+          const waNum = (l.whatsapp ?? l.telefone ?? '').replace(/\D/g, '')
+          const waMsg = l.status_saas === 'trial'
+            ? `Olá ${l.responsavel ?? l.nome}! Seu trial do Cylo vence em ${du !== null ? `${du} dia(s)` : 'breve'}. Para continuar com tudo funcionando, assine por apenas R$ ${(l.valor_mensal ?? 59.9).toFixed(2).replace('.', ',')}/mês. Me chama se tiver dúvida! 🚀`
+            : `Olá ${l.responsavel ?? l.nome}! Sua assinatura do Cylo está vencendo. Renove por R$ ${(l.valor_mensal ?? 59.9).toFixed(2).replace('.', ',')}/mês para continuar gerenciando sua loja sem interrupção. Qualquer coisa estou aqui! 💬`
+          const waLink = waNum ? `https://wa.me/55${waNum}?text=${encodeURIComponent(waMsg)}` : null
           return (
             <div key={l.id} className="bg-white/5 border border-white/8 rounded-2xl overflow-hidden">
               <div className="h-1" style={{ background: l.cor_primaria ?? '#4f7eff' }} />
@@ -185,7 +190,25 @@ async function CEODashboard() {
                     <p className="text-white/60">{fdBR(l.criada_em?.split('T')[0] ?? null)}</p>
                   </div>
                 </div>
-                <LojaCardActions lojaId={l.id} status={l.status_saas} />
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex-1">
+                    <LojaCardActions lojaId={l.id} status={l.status_saas} />
+                  </div>
+                  {waLink && (
+                    <a
+                      href={waLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Contatar no WhatsApp"
+                      className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-400 transition-colors flex-shrink-0"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.558 4.118 1.535 5.846L.057 23.857a.5.5 0 0 0 .609.61l6.102-1.492A11.944 11.944 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.944 9.944 0 0 1-5.072-1.383l-.362-.216-3.753.917.949-3.663-.236-.374A9.944 9.944 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+                      </svg>
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           )
