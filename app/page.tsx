@@ -40,32 +40,37 @@ export default async function RootPage() {
       {/* ── HERO ── */}
       <section className="bg-gradient-to-b from-indigo-50 via-indigo-50/50 to-white px-5 pt-16 pb-24">
         <div className="max-w-5xl mx-auto">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-indigo-100 rounded-full px-4 py-1.5 mb-7">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-              <span className="text-xs font-bold text-indigo-700 uppercase tracking-wider">15 dias grátis · sem cartão</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+
+            {/* Copy */}
+            <div>
+              <div className="inline-flex items-center gap-2 bg-indigo-100 rounded-full px-4 py-1.5 mb-7">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                <span className="text-xs font-bold text-indigo-700 uppercase tracking-wider">15 dias grátis · sem cartão</span>
+              </div>
+
+              <h1 className="text-[40px] lg:text-5xl font-black tracking-tight leading-[1.08] mb-5 text-[#0f172a]">
+                O sistema feito pra quem vive de vender iPhone
+              </h1>
+
+              <p className="text-lg text-gray-500 leading-relaxed mb-8">
+                Controle o estoque por IMEI, as vendas, a comissão dos vendedores e o caixa da loja — tudo numa tela só.
+              </p>
+
+              <Link
+                href="/cadastro"
+                className="inline-flex items-center gap-2 bg-[#6366f1] hover:bg-[#4f51d9] text-white font-bold px-8 py-4 rounded-2xl text-base transition-colors shadow-lg shadow-indigo-200"
+              >
+                Criar conta grátis →
+              </Link>
+              <p className="text-sm text-gray-400 mt-3">15 dias grátis · sem cartão de crédito</p>
             </div>
 
-            <h1 className="text-[40px] sm:text-5xl font-black tracking-tight leading-[1.08] mb-5 text-[#0f172a]">
-              O sistema feito pra quem vive de vender iPhone
-            </h1>
+            {/* Mockup */}
+            <div className="bg-[#0e1018] rounded-3xl p-6 lg:p-8 shadow-2xl shadow-slate-200">
+              <MockupAnimado />
+            </div>
 
-            <p className="text-lg text-gray-500 leading-relaxed mb-8 max-w-xl">
-              Controle o estoque por IMEI, as vendas, a comissão dos vendedores e o caixa da loja — tudo numa tela só.
-            </p>
-
-            <Link
-              href="/cadastro"
-              className="inline-flex items-center gap-2 bg-[#6366f1] hover:bg-[#4f51d9] text-white font-bold px-8 py-4 rounded-2xl text-base transition-colors shadow-lg shadow-indigo-200"
-            >
-              Criar conta grátis →
-            </Link>
-            <p className="text-sm text-gray-400 mt-3">15 dias grátis · sem cartão de crédito</p>
-          </div>
-
-          {/* Mockup */}
-          <div className="mt-14 bg-[#0e1018] rounded-3xl p-6 sm:p-8 shadow-2xl shadow-slate-200 max-w-2xl">
-            <MockupAnimado />
           </div>
         </div>
       </section>
