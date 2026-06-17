@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import MockupAnimado from '@/components/login/mockup-animado'
 import FAQAccordion from '@/components/landing/faq-accordion'
+import UtmCapture from '@/components/landing/utm-capture'
 
 const FOUNDER_WA = '5511932652082'
 const WA_LINK = `https://wa.me/${FOUNDER_WA}?text=${encodeURIComponent('Olá! Vi o Cylo e quero saber mais sobre como minha loja pode ter acesso.')}`
@@ -23,6 +24,7 @@ export default async function RootPage() {
 
   return (
     <div className="bg-white text-[#0f172a]">
+      <UtmCapture />
 
       {/* ── HEADER ── */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">

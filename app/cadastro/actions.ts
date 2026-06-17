@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 
 function iniciais(nome: string): string {
   return nome.trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase()
@@ -18,6 +19,16 @@ export async function cadastrar(formData: FormData): Promise<{ error: string } |
     return { error: 'Preencha todos os campos obrigatórios.' }
   if (senha.length < 8)
     return { error: 'A senha deve ter no mínimo 8 caracteres.' }
+
+  // Atribuição de marketing (UTM/gclid) salva no cadastro
+  let attrib: Record<string, string> = {}
+  try {
+    const cookieStore = await cookies()
+    const raw = cookieStore.get('cylo_attrib')?.value
+    if (raw) attrib = JSON.parse(decodeURIComponent(raw))
+  } catch {
+    attrib = {}
+  }
 
   const admin = createAdminClient()
 
@@ -42,7 +53,10 @@ export async function cadastrar(formData: FormData): Promise<{ error: string } |
     .select('id')
     .single()
 
-  if (erroLoja || !loja) return { error: 'Erro ao criar loja.' }
+  if (erroLoja || !loja) {
+    console.error('[cadastrar] erro ao criar loja:', erroLoja)
+    return { error: 'Erro ao criar loja.' }
+  }
 
   // 2. Criar auth user
   const { data: authData, error: erroAuth } = await admin.auth.admin.createUser({
@@ -52,8 +66,9 @@ export async function cadastrar(formData: FormData): Promise<{ error: string } |
   })
 
   if (erroAuth || !authData.user) {
+    console.error('[cadastrar] erro ao criar auth user:', erroAuth)
     await admin.from('lojas').delete().eq('id', loja.id)
-    if (erroAuth?.message?.includes('already registered'))
+    if (erroAuth?.code === 'email_exists' || erroAuth?.message?.includes('already been registered'))
       return { error: 'Este e-mail já está em uso.' }
     return { error: 'Erro ao criar conta.' }
   }
@@ -68,6 +83,12 @@ export async function cadastrar(formData: FormData): Promise<{ error: string } |
     perfil: 'loja_admin',
     iniciais: iniciais(nomeAdmin),
     comissao_pct: 0,
+    utm_source: attrib.utm_source ?? null,
+    utm_medium: attrib.utm_medium ?? null,
+    utm_campaign: attrib.utm_campaign ?? null,
+    utm_content: attrib.utm_content ?? null,
+    utm_term: attrib.utm_term ?? null,
+    gclid: attrib.gclid ?? null,
   })
 
   if (erroUsuario) {
@@ -80,5 +101,5 @@ export async function cadastrar(formData: FormData): Promise<{ error: string } |
   const supabase = await createClient()
   await supabase.auth.signInWithPassword({ email, password: senha })
 
-  redirect('/dashboard')
+  redirect('/dashboard?novo=1')
 }

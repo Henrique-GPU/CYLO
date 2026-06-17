@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
 // Rotas públicas — sem autenticação necessária
-const PUBLIC_PATHS = ['/', '/login', '/cadastro', '/onboarding', '/sitemap.xml', '/robots.txt']
+const PUBLIC_PATHS = ['/', '/login', '/cadastro', '/onboarding', '/sitemap.xml', '/robots.txt', '/manifest.webmanifest']
 
 // Rotas que admins bloqueados/vencidos ainda podem acessar
 const ALLOWED_WHEN_BLOCKED = ['/bloqueado', '/configuracoes', '/login', '/cadastro', '/api/auth']

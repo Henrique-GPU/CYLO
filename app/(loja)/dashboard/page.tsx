@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { fmt } from '@/lib/utils/format'
 import Link from 'next/link'
 import { LojaCardActions } from '@/app/(loja)/lojas/loja-card-actions'
+import TrackConversion from '@/components/dashboard/track-conversion'
 
 // ── helpers ────────────────────────────────────────────────────────
 function daysDiff(dateStr: string) {
@@ -588,5 +589,10 @@ export default async function DashboardPage() {
   if (usuario.perfil === 'vendedor') redirect('/minha-area')
   if (!usuario.loja_id) redirect('/login')
 
-  return <AdminDashboard lojaId={usuario.loja_id} />
+  return (
+    <>
+      <TrackConversion />
+      <AdminDashboard lojaId={usuario.loja_id} />
+    </>
+  )
 }
