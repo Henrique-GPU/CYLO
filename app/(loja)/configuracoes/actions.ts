@@ -58,6 +58,7 @@ export async function editarMinhaLoja(formData: FormData) {
     email: (formData.get('email') as string) || null,
     garantia_padrao: (formData.get('garantia_padrao') as string) || null,
     cor_primaria: (formData.get('cor_primaria') as string) || '#4f7eff',
+    meta_mensal: formData.get('meta_mensal') ? Number(formData.get('meta_mensal')) : null,
   }
 
   if (removerLogo) updateData.logo_url = null

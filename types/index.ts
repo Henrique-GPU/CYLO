@@ -22,6 +22,7 @@ export interface Loja {
   cor_secundaria: string
   status_saas: StatusSaas
   valor_mensal: number
+  meta_mensal: number | null
   data_inicio_trial: string | null
   data_fim_trial: string | null
   proximo_vencimento: string | null

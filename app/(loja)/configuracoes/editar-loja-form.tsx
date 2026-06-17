@@ -141,6 +141,10 @@ export default function EditarMinhaLojaForm({ loja, redirectAfterSave }: { loja:
             <label className="label">Garantia padrão (dias)</label>
             <input name="garantia_padrao" defaultValue={loja.garantia_padrao ?? ''} placeholder="90" className="inp" />
           </div>
+          <div>
+            <label className="label">Meta de faturamento do mês (R$)</label>
+            <input name="meta_mensal" type="number" min="0" step="100" defaultValue={loja.meta_mensal ?? ''} placeholder="Ex: 80000" className="inp" />
+          </div>
         </div>
       </div>
 

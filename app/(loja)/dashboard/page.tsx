@@ -4,6 +4,9 @@ import { fmt } from '@/lib/utils/format'
 import Link from 'next/link'
 import { LojaCardActions } from '@/app/(loja)/lojas/loja-card-actions'
 import TrackConversion from '@/components/dashboard/track-conversion'
+import PeriodSelector from '@/components/dashboard/period-selector'
+import RevenueChart from '@/components/dashboard/revenue-chart'
+import CommissionRanking from '@/components/dashboard/commission-ranking'
 
 // ── helpers ────────────────────────────────────────────────────────
 function daysDiff(dateStr: string) {
@@ -28,25 +31,57 @@ function mesNome() {
 function ini(nome: string) {
   return nome.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase()
 }
+function toISO(d: Date) {
+  return d.toISOString().split('T')[0]
+}
+function periodoRanges(periodo: string) {
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+  const amanha = new Date(hoje)
+  amanha.setDate(amanha.getDate() + 1)
 
-// ── sub-components ─────────────────────────────────────────────────
-function KpiBox({
-  icon, label, value, sub, valueColor,
-}: { icon: string; label: string; value: string; sub?: string; valueColor?: string }) {
-  return (
-    <div className="bg-white/5 border border-white/8 rounded-2xl p-4 flex flex-col gap-1">
-      <div className="flex items-center gap-1.5 mb-1">
-        <span className="text-base">{icon}</span>
-        <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">{label}</span>
-      </div>
-      <div className="text-[22px] font-black tracking-tight leading-none" style={valueColor ? { color: valueColor } : { color: '#e8eaf0' }}>
-        {value}
-      </div>
-      {sub && <div className="text-[10px] text-white/30 mt-0.5">{sub}</div>}
-    </div>
-  )
+  if (periodo === 'hoje') {
+    const ontem = new Date(hoje); ontem.setDate(ontem.getDate() - 1)
+    return { inicio: hoje, fim: amanha, inicioAnt: ontem, fimAnt: hoje, dias: 1 }
+  }
+  if (periodo === '7d') {
+    const inicio = new Date(hoje); inicio.setDate(inicio.getDate() - 6)
+    const inicioAnt = new Date(inicio); inicioAnt.setDate(inicioAnt.getDate() - 7)
+    return { inicio, fim: amanha, inicioAnt, fimAnt: inicio, dias: 7 }
+  }
+  if (periodo === 'mes') {
+    const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
+    const fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1)
+    const inicioAnt = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1)
+    const dias = Math.round((fim.getTime() - inicio.getTime()) / 86400000)
+    return { inicio, fim, inicioAnt, fimAnt: inicio, dias }
+  }
+  // 30d (default)
+  const inicio = new Date(hoje); inicio.setDate(inicio.getDate() - 29)
+  const inicioAnt = new Date(inicio); inicioAnt.setDate(inicioAnt.getDate() - 30)
+  return { inicio, fim: amanha, inicioAnt, fimAnt: inicio, dias: 30 }
+}
+function serieDiaria(vendas: { data_venda: string; valor_total: number }[], inicio: Date, fim: Date) {
+  const porDia: Record<string, number> = {}
+  const cursor = new Date(inicio)
+  while (cursor < fim) {
+    porDia[toISO(cursor)] = 0
+    cursor.setDate(cursor.getDate() + 1)
+  }
+  vendas.forEach(v => {
+    const dia = v.data_venda.split('T')[0]
+    if (dia in porDia) porDia[dia] += v.valor_total ?? 0
+  })
+  return Object.entries(porDia).map(([dia, total]) => ({
+    dia: `${dia.split('-')[2]}/${dia.split('-')[1]}`,
+    total,
+  }))
+}
+function temVendaSuficiente(vendas: any[]) {
+  return vendas.length >= 2
 }
 
+// ── sub-components ─────────────────────────────────────────────────
 function SaasBadge({ status }: { status: string }) {
   const cls: Record<string, string> = {
     ativo: 'bg-emerald-500/15 text-emerald-400',
@@ -220,49 +255,76 @@ async function CEODashboard() {
 }
 
 // ── Admin Dashboard ────────────────────────────────────────────────
-async function AdminDashboard({ lojaId }: { lojaId: string }) {
+async function AdminDashboard({ lojaId, searchParams }: { lojaId: string; searchParams: Promise<{ periodo?: string }> }) {
   const supabase = await createClient()
+  const { periodo: periodoParam } = await searchParams
+  const periodo = periodoParam ?? '30d'
+  const { inicio, fim, inicioAnt, fimAnt } = periodoRanges(periodo)
 
   const hoje = new Date()
-  const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0]
-  const inicioMesAnt = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1).toISOString().split('T')[0]
-  const fimMesAnt = new Date(hoje.getFullYear(), hoje.getMonth(), 0).toISOString().split('T')[0]
+  const inicioMes = toISO(new Date(hoje.getFullYear(), hoje.getMonth(), 1))
+  const fimMes = toISO(new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1))
 
-  const [vendasRes, vendasAntRes, aparelhosRes, vendedoresRes] = await Promise.all([
+  const [vendasRes, vendasAntRes, vendasMesRes, aparelhosRes, vendedoresRes, lojaRes] = await Promise.all([
     supabase.from('vendas')
       .select('id, cliente_nome, valor_total, lucro, comissao, data_venda, aparelho_id, vendedor_id')
       .eq('loja_id', lojaId).eq('status', 'convertido')
-      .gte('data_venda', inicioMes).order('data_venda', { ascending: false }),
+      .gte('data_venda', toISO(inicio)).lt('data_venda', toISO(fim))
+      .order('data_venda', { ascending: false }),
     supabase.from('vendas')
       .select('valor_total, lucro, comissao')
       .eq('loja_id', lojaId).eq('status', 'convertido')
-      .gte('data_venda', inicioMesAnt).lte('data_venda', fimMesAnt),
+      .gte('data_venda', toISO(inicioAnt)).lt('data_venda', toISO(fimAnt)),
+    supabase.from('vendas')
+      .select('valor_total')
+      .eq('loja_id', lojaId).eq('status', 'convertido')
+      .gte('data_venda', inicioMes).lt('data_venda', fimMes),
     supabase.from('aparelhos')
       .select('id, tipo, status, custo, data_entrada, modelo, capacidade, cor')
       .eq('loja_id', lojaId),
     supabase.from('usuarios')
       .select('id, nome, iniciais, comissao_pct, meta_mensal')
       .eq('loja_id', lojaId).eq('perfil', 'vendedor').eq('status', 'ativo'),
+    supabase.from('lojas')
+      .select('meta_mensal')
+      .eq('id', lojaId)
+      .single<{ meta_mensal: number | null }>(),
   ])
 
   const vs = (vendasRes.data ?? []) as any[]
   const vsL = (vendasAntRes.data ?? []) as any[]
+  const vsMes = (vendasMesRes.data ?? []) as any[]
   const aps_all = (aparelhosRes.data ?? []) as any[]
   const vends = (vendedoresRes.data ?? []) as any[]
+  const lojaMeta = lojaRes.data?.meta_mensal ?? null
 
   const aps = aps_all.filter((a: any) => a.status !== 'vendido')
   const vendidosCount = aps_all.filter((a: any) => a.status === 'vendido').length
 
-  // Financial
+  // Financial — período atual vs período anterior
+  function calcVar(atual: number, anterior: number) {
+    if (anterior <= 0) return null
+    return Math.round((atual - anterior) / anterior * 100)
+  }
   const fat = vs.reduce((s, v) => s + (v.valor_total ?? 0), 0)
   const fatL = vsL.reduce((s, v) => s + (v.valor_total ?? 0), 0)
   const luc = vs.reduce((s, v) => s + (v.lucro ?? 0), 0)
+  const lucL = vsL.reduce((s, v) => s + (v.lucro ?? 0), 0)
   const com = vs.reduce((s, v) => s + (v.comissao ?? 0), 0)
   const nVend = vs.length
+  const nVendL = vsL.length
   const ticket = nVend > 0 ? fat / nVend : 0
+  const ticketL = nVendL > 0 ? fatL / nVendL : 0
   const mg = fat > 0 ? (luc / fat * 100).toFixed(1) : '0'
   const entrada = fat - com
-  const fatDiff = fatL > 0 ? Math.round((fat - fatL) / fatL * 100) : null
+  const entradaL = fatL - vsL.reduce((s, v) => s + (v.comissao ?? 0), 0)
+
+  const fatVar = calcVar(fat, fatL)
+  const lucVar = calcVar(luc, lucL)
+  const ticketVar = calcVar(ticket, ticketL)
+  const entradaVar = calcVar(entrada, entradaL)
+
+  const fatMes = vsMes.reduce((s, v) => s + (v.valor_total ?? 0), 0)
 
   // Stock
   const disps = aps.filter((a: any) => ['disponivel', 'negociacao', 'em_analise'].includes(a.status))
@@ -285,15 +347,21 @@ async function AdminDashboard({ lojaId }: { lojaId: string }) {
   })
   const topModelos = Object.entries(mc).sort((a, b) => b[1] - a[1]).slice(0, 5)
 
-  // Vendedores ranking
+  // Vendedores ranking (por comissão, no período selecionado)
   const rank = vends.map((u: any) => ({
     ...u,
     qtd: vs.filter((v: any) => v.vendedor_id === u.id).length,
     fat: vs.filter((v: any) => v.vendedor_id === u.id).reduce((s: number, v: any) => s + (v.valor_total ?? 0), 0),
     com: vs.filter((v: any) => v.vendedor_id === u.id).reduce((s: number, v: any) => s + (v.comissao ?? 0), 0),
-  })).sort((a: any, b: any) => b.fat - a.fat)
+  })).filter((r: any) => r.com > 0).sort((a: any, b: any) => b.com - a.com)
 
-  const best = rank[0] ?? null
+  const bestPorFat = [...vends.map((u: any) => ({
+    ...u,
+    qtd: vs.filter((v: any) => v.vendedor_id === u.id).length,
+    fat: vs.filter((v: any) => v.vendedor_id === u.id).reduce((s: number, v: any) => s + (v.valor_total ?? 0), 0),
+    com: vs.filter((v: any) => v.vendedor_id === u.id).reduce((s: number, v: any) => s + (v.comissao ?? 0), 0),
+  }))].sort((a: any, b: any) => b.fat - a.fat)
+  const best = bestPorFat[0] ?? null
 
   // Saúde score
   let score = 100
@@ -303,209 +371,218 @@ async function AdminDashboard({ lojaId }: { lojaId: string }) {
   if (giro < 40) score -= 20
   else if (giro > 70) score += 10
   if (fat === 0) score -= 30
-  else if (fatDiff !== null) {
-    if (fatDiff < 0) score += fatDiff
-    else score += Math.min(10, fatDiff / 2)
+  else if (fatVar !== null) {
+    if (fatVar < 0) score += fatVar
+    else score += Math.min(10, fatVar / 2)
   }
   score = Math.max(0, Math.min(100, score))
   const saude = score >= 65
-    ? { label: 'Loja Saudável', icon: '🟢', color: '#34d399', bg: 'rgba(52,211,153,.08)', border: 'rgba(52,211,153,.2)', msg: 'Estoque girando bem e vendas ativas.' }
+    ? { label: 'Loja saudável', color: '#34d399', bg: 'rgba(52,211,153,0.07)', border: 'rgba(52,211,153,0.20)', msg: '— estoque girando bem e vendas ativas' }
     : score >= 35
-    ? { label: 'Atenção', icon: '🟡', color: '#fbbf24', bg: 'rgba(251,191,36,.08)', border: 'rgba(251,191,36,.2)', msg: 'Existem pontos que merecem atenção na operação.' }
-    : { label: 'Situação Crítica', icon: '🔴', color: '#f87171', bg: 'rgba(248,113,113,.08)', border: 'rgba(248,113,113,.25)', msg: 'Há aparelhos críticos no estoque e/ou queda nas vendas.' }
+    ? { label: 'Atenção', color: '#f59e0b', bg: 'rgba(245,158,11,0.07)', border: 'rgba(245,158,11,0.20)', msg: '— existem pontos que merecem atenção na operação' }
+    : { label: 'Situação crítica', color: '#f87171', bg: 'rgba(248,113,113,0.07)', border: 'rgba(248,113,113,0.22)', msg: '— há aparelhos críticos no estoque e/ou queda nas vendas' }
 
   // Alertas
   const alertas: string[] = []
-  if (p90 > 0) alertas.push(`🚨 ${p90} aparelho(s) parado(s) há mais de 90 dias`)
-  if (fatDiff !== null && fatDiff < -5) alertas.push(`📉 Vendas caíram ${Math.abs(fatDiff)}% em relação ao mês anterior`)
-  if (nVend === 0) alertas.push('⚠️ Nenhuma venda registrada este mês')
-  if (usados.length < 5) alertas.push(`📦 Estoque de usados abaixo de 5 (${usados.length} disponíveis)`)
-  if (novos.length < 3) alertas.push(`📱 Estoque de novos abaixo de 3 (${novos.length} disponíveis)`)
+  if (p90 > 0) alertas.push(`${p90} aparelho(s) parado(s) há mais de 90 dias`)
+  if (fatVar !== null && fatVar < -5) alertas.push(`Vendas caíram ${Math.abs(fatVar)}% em relação ao período anterior`)
+  if (nVend === 0) alertas.push('Nenhuma venda registrada no período')
+  if (usados.length < 5) alertas.push(`Estoque de usados abaixo de 5 (${usados.length} disponível)`)
+  if (novos.length < 3) alertas.push(`Estoque de novos abaixo de 3 (${novos.length} disponível)`)
 
   const ultVendas = vs.slice(0, 5)
+  const serie = serieDiaria(vs, inicio, fim)
+  const periodoLabel: Record<string, string> = { hoje: 'hoje', '7d': 'últimos 7 dias', '30d': 'últimos 30 dias', mes: mesNome() }
+
+  // Meta do mês
+  const metaPct = lojaMeta ? Math.min(100, fatMes / lojaMeta * 100) : null
+  const diasRestantesMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1).getDate() - hoje.getDate() +
+    (new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate() - hoje.getDate())
+  const diasNoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate()
+  const diasFaltam = diasNoMes - hoje.getDate()
 
   return (
-    <div className="p-6 max-w-[1400px]">
+    <div className="p-4 sm:p-6 max-w-[1400px]" style={{ background: '#0b0c11' }}>
 
-      {/* LINHA 1: Saúde + 4 KPIs */}
-      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-3.5 mb-3.5">
-        <div className="rounded-2xl p-5 flex flex-col justify-between min-h-[120px]"
-          style={{ background: saude.bg, border: `1px solid ${saude.border}` }}>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-white/30 mb-2">Saúde da Operação</p>
-            <p className="text-xl font-black tracking-tight" style={{ color: saude.color }}>
-              {saude.icon} {saude.label}
-            </p>
-            <p className="text-[11px] text-white/40 mt-1.5 leading-relaxed">{saude.msg}</p>
-          </div>
-          <p className="text-[9px] text-white/20 mt-3 pt-2.5" style={{ borderTop: `1px solid ${saude.border}` }}>
-            Baseado em estoque, giro e vendas.
-          </p>
+      {/* TOPBAR */}
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+        <div>
+          <p className="text-base font-medium" style={{ color: '#e8e8ec' }}>Dashboard</p>
+          <p className="text-[11px] capitalize" style={{ color: '#8a8b94' }}>{mesNome()}</p>
         </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-          <KpiBox
-            icon="💰" label="Faturamento" value={fmt(fat)} valueColor="#34d399"
-            sub={fatDiff !== null
-              ? `${fatDiff >= 0 ? '▲' : '▼'} ${Math.abs(fatDiff)}% vs mês ant.`
-              : `${nVend} venda(s)`}
-          />
-          <KpiBox
-            icon="📈" label="Lucro Previsto" value={fmt(luc)} valueColor={luc > 0 ? '#34d399' : '#f87171'}
-            sub={`Margem: ${mg}%`}
-          />
-          <KpiBox
-            icon="💳" label="Ticket Médio" value={fmt(ticket)}
-            sub={nVend > 0 ? `${nVend} vendas` : 'Sem vendas'}
-          />
-          <KpiBox
-            icon="💵" label="Entrada em Caixa" value={fmt(entrada)}
-            sub="Após comissões"
-          />
+        <div className="flex items-center gap-2">
+          <PeriodSelector atual={periodo} />
+          <button
+            className="relative w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a8b94" strokeWidth="2">
+              <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            {alertas.length > 0 && (
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full" style={{ background: '#f59e0b' }} />
+            )}
+          </button>
         </div>
       </div>
 
-      {/* LINHA 2: Estoque KPIs */}
+      {/* Faixa Saúde da operação */}
+      <div className="rounded-[10px] px-4 py-3 mb-3.5 flex items-center gap-2"
+        style={{ background: saude.bg, border: `1px solid ${saude.border}` }}>
+        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: saude.color }} />
+        <p className="text-[13px] font-medium" style={{ color: saude.color }}>{saude.label}</p>
+        <p className="text-[12px]" style={{ color: '#8a8b94' }}>{saude.msg}</p>
+      </div>
+
+      {/* KPIs nível 1 */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mb-2.5">
+        <Kpi1 label="Faturamento" value={fmt(fat)} color="#34d399" variacao={fatVar} />
+        <Kpi1 label="Lucro previsto" value={fmt(luc)} color="#34d399" variacao={lucVar} />
+        <Kpi1 label="Ticket médio" value={fmt(ticket)} color="#e8e8ec" variacao={ticketVar} />
+        <Kpi1 label="Entrada em caixa" value={fmt(entrada)} color="#60a5fa" variacao={entradaVar} />
+      </div>
+
+      {/* KPIs nível 2 */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-2.5 mb-3.5">
-        <div className="col-span-2 lg:col-span-1 bg-white/5 border border-white/8 rounded-2xl p-4"
-          style={{ background: 'linear-gradient(135deg,rgba(79,126,255,.1),rgba(79,126,255,.03))', borderColor: 'rgba(79,126,255,.2)' }}>
-          <div className="flex items-center gap-1.5 mb-2">
-            <span>📦</span>
-            <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">Valor Investido em Estoque</span>
-          </div>
-          <div className="text-[22px] font-black tracking-tight text-[#4f7eff]">{fmt(invest)}</div>
-          <div className="text-[10px] text-white/30 mt-0.5">
-            {disps.length} disp. · {fmt(investN)} novos · {fmt(investU)} usados
-          </div>
-        </div>
-        <KpiBox icon="📱" label="Novos" value={String(novos.length)} sub={fmt(investN) + ' investido'} />
-        <KpiBox icon="🔄" label="Usados" value={String(usados.length)} sub={fmt(investU) + ' investido'} />
-        <KpiBox icon="⚡" label="Negociação" value={String(negoc)} sub="Possíveis compradores" valueColor="#22d3ee" />
-        <KpiBox icon="👨‍💼" label="Comissões" value={fmt(com)} sub="Mês atual" valueColor="#fbbf24" />
+        <Kpi2 label="Valor em estoque" value={fmt(invest)} color="#a78bfa" />
+        <Kpi2 label="Novos" value={String(novos.length)} color="#e8e8ec" />
+        <Kpi2 label="Usados" value={String(usados.length)} color="#e8e8ec" />
+        <Kpi2 label="Negociação" value={String(negoc)} color="#e8e8ec" />
+        <Kpi2 label="Comissões" value={fmt(com)} color="#f59e0b" />
       </div>
 
-      {/* Alertas */}
+      {/* Faixa de alertas */}
       {alertas.length > 0 && (
-        <div className="rounded-2xl p-4 mb-3.5"
-          style={{ background: 'rgba(251,191,36,.06)', border: '1px solid rgba(251,191,36,.18)' }}>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-yellow-400 mb-2.5">Alertas da Loja</p>
-          <div className="flex flex-col gap-1.5">
-            {alertas.map((a, i) => <p key={i} className="text-xs text-white/50">{a}</p>)}
+        <div className="rounded-[10px] p-4 mb-3.5" style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.20)' }}>
+          <div className="flex items-start gap-2.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" className="mt-0.5 flex-shrink-0">
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <path d="M12 9v4M12 17h.01" />
+            </svg>
+            <div className="flex flex-col gap-1">
+              {alertas.map((a, i) => <p key={i} className="text-[12px]" style={{ color: '#e8e8ec' }}>{a}</p>)}
+            </div>
           </div>
         </div>
       )}
 
-      {/* LINHA 3: Últimas vendas + Melhor vendedor + Top modelos */}
-      <div className="flex flex-col lg:flex-row gap-3.5 items-start">
+      {/* Gráfico de faturamento */}
+      <div className="rounded-[10px] mb-3.5 p-4" style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-medium" style={{ color: '#e8e8ec' }}>Faturamento · {periodoLabel[periodo]}</p>
+          {fatVar !== null && (
+            <span className="text-[11px] font-semibold" style={{ color: fatVar >= 0 ? '#34d399' : '#f87171' }}>
+              {fatVar >= 0 ? '▲' : '▼'} {Math.abs(fatVar)}% vs período ant.
+            </span>
+          )}
+        </div>
+        {temVendaSuficiente(vs) ? (
+          <RevenueChart serie={serie} />
+        ) : (
+          <div className="flex items-center justify-center" style={{ height: 96 }}>
+            <p className="text-[12px] text-center" style={{ color: '#6b6c75' }}>
+              Ainda juntando dados — registre vendas para ver sua curva de faturamento.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Últimas vendas + Melhor vendedor + Top modelos */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1.55fr_1fr] gap-3.5 mb-3.5">
 
         {/* Últimas vendas */}
-        <div className="flex-[2] bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5">
-            <div>
-              <p className="text-sm font-semibold text-white">Últimas Vendas</p>
-              <p className="text-[10px] text-white/30">{mesNome()}</p>
-            </div>
-            <Link href="/vendas" className="text-[10px] text-white/40 hover:text-white transition-colors">
-              Ver todas →
-            </Link>
+        <div className="rounded-[10px] overflow-hidden" style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <p className="text-sm font-medium" style={{ color: '#e8e8ec' }}>Últimas vendas</p>
+            <Link href="/vendas" className="text-[11px]" style={{ color: '#60a5fa' }}>Ver todas →</Link>
           </div>
           {ultVendas.length === 0 ? (
             <div className="flex flex-col items-center py-10">
-              <p className="text-white/20 text-sm">Nenhuma venda este mês.</p>
+              <p className="text-sm" style={{ color: '#6b6c75' }}>Nenhuma venda no período.</p>
             </div>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-white/5">
-                  {['Data', 'Cliente', 'Produto', 'Valor', 'Lucro'].map(h => (
-                    <th key={h} className="text-left text-[10px] text-white/30 font-medium px-5 py-2.5">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {ultVendas.map((v: any) => {
-                  const ap = aps_all.find((a: any) => a.id === v.aparelho_id)
-                  return (
-                    <tr key={v.id} className="border-b border-white/5 last:border-0 hover:bg-white/3">
-                      <td className="px-5 py-2.5 text-[11px] text-white/40">{v.data_venda}</td>
-                      <td className="px-5 py-2.5 text-xs font-semibold text-white">{v.cliente_nome}</td>
-                      <td className="px-5 py-2.5 text-[11px] text-white/50">{ap?.modelo ?? '–'}</td>
-                      <td className="px-5 py-2.5 text-xs font-mono text-white">{fmt(v.valor_total)}</td>
-                      <td className="px-5 py-2.5 text-xs font-mono text-emerald-400">{fmt(v.lucro)}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[420px]">
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    {['Data', 'Cliente', 'Valor', 'Lucro'].map(h => (
+                      <th key={h} className="text-left text-[10px] font-medium px-5 py-2.5" style={{ color: '#6b6c75' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {ultVendas.map((v: any) => (
+                    <tr key={v.id} className="last:border-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                      <td className="px-5 py-2.5 text-[11px]" style={{ color: '#8a8b94' }}>{fdBR(v.data_venda?.split('T')[0])}</td>
+                      <td className="px-5 py-2.5 text-xs font-medium" style={{ color: '#e8e8ec' }}>{v.cliente_nome}</td>
+                      <td className="px-5 py-2.5 text-xs font-mono" style={{ color: '#e8e8ec' }}>{fmt(v.valor_total)}</td>
+                      <td className="px-5 py-2.5 text-xs font-mono text-right" style={{ color: '#34d399' }}>{fmt(v.lucro)}</td>
                     </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
         {/* Coluna direita */}
-        <div className="flex-1 flex flex-col gap-3.5 min-w-[220px]">
+        <div className="flex flex-col gap-3.5">
 
           {/* Melhor vendedor */}
-          <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-white/5">
-              <p className="text-xs font-semibold text-white">🏆 Melhor Vendedor</p>
-              <p className="text-[10px] text-white/30">{mesNome()}</p>
+          <div className="rounded-[10px] overflow-hidden" style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2">
+                <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 4H4a2 2 0 0 0 0 4M17 4h3a2 2 0 0 1 0 4" />
+              </svg>
+              <p className="text-xs font-medium" style={{ color: '#e8e8ec' }}>Melhor vendedor</p>
             </div>
             {!best || best.fat === 0 ? (
               <div className="px-4 py-5 text-center">
-                <p className="text-xs text-white/30">Sem vendas no período.</p>
+                <p className="text-xs" style={{ color: '#6b6c75' }}>Sem vendas no período.</p>
               </div>
             ) : (
               <div className="p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#4f7eff]/20 text-[#4f7eff] flex items-center justify-center text-xs font-bold flex-shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0"
+                    style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa' }}>
                     {best.iniciais ?? ini(best.nome)}
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-white">{best.nome}</p>
-                    <p className="text-[11px] text-emerald-400 font-semibold">{fmt(best.fat)} vendidos</p>
-                    <p className="text-[10px] text-white/30">{best.qtd} venda(s) · com. {fmt(best.com)}</p>
+                    <p className="text-sm font-semibold" style={{ color: '#e8e8ec' }}>{best.nome}</p>
+                    <p className="text-[11px]" style={{ color: '#8a8b94' }}>{best.qtd} venda(s) · {fmt(best.fat)}</p>
                   </div>
                 </div>
-                {best.meta_mensal > 0 && (() => {
-                  const pct = Math.min(100, best.fat / best.meta_mensal * 100)
-                  const barColor = pct >= 100 ? '#34d399' : pct >= 70 ? '#4f7eff' : '#fbbf24'
-                  return (
-                    <div>
-                      <p className="text-[10px] text-white/30 mb-1">{pct.toFixed(0)}% da meta ({fmt(best.meta_mensal)})</p>
-                      <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: barColor }} />
-                      </div>
-                    </div>
-                  )
-                })()}
               </div>
             )}
           </div>
 
           {/* Top modelos */}
-          <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-white/5">
-              <p className="text-xs font-semibold text-white">📱 Top Modelos Vendidos</p>
+          <div className="rounded-[10px] overflow-hidden flex-1" style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <p className="text-xs font-medium" style={{ color: '#e8e8ec' }}>Top modelos vendidos</p>
             </div>
             {topModelos.length === 0 ? (
               <div className="px-4 py-5 text-center">
-                <p className="text-xs text-white/30">Sem dados.</p>
+                <p className="text-xs" style={{ color: '#6b6c75' }}>Sem dados no período.</p>
               </div>
             ) : (
               <div>
                 {topModelos.map(([modelo, qtd], i) => {
-                  const pct = (qtd / topModelos[0][1] * 100).toFixed(0)
+                  const pct = (qtd / topModelos[0][1] * 100)
                   return (
-                    <div key={modelo} className="flex items-center gap-2.5 px-4 py-2.5 border-b border-white/5 last:border-0">
-                      <div className="w-4 h-4 rounded-full bg-[#4f7eff]/15 text-[#4f7eff] flex items-center justify-center text-[9px] font-bold">
+                    <div key={modelo} className="flex items-center gap-2.5 px-4 py-2.5 last:border-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0"
+                        style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa' }}>
                         {i + 1}
                       </div>
-                      <div className="flex-1">
-                        <p className="text-[11px] font-semibold text-white">{modelo}</p>
-                        <div className="h-0.5 bg-white/10 rounded-full mt-1 overflow-hidden">
-                          <div className="h-full bg-[#4f7eff] rounded-full" style={{ width: `${pct}%` }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-medium truncate" style={{ color: '#e8e8ec' }}>{modelo}</p>
+                        <div className="h-0.5 rounded-full mt-1 overflow-hidden" style={{ background: '#1f2230' }}>
+                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: '#60a5fa' }} />
                         </div>
                       </div>
-                      <span className="text-xs font-bold text-[#4f7eff]">{qtd}</span>
+                      <span className="text-xs font-bold flex-shrink-0" style={{ color: '#60a5fa' }}>{qtd}</span>
                     </div>
                   )
                 })}
@@ -515,64 +592,101 @@ async function AdminDashboard({ lojaId }: { lojaId: string }) {
         </div>
       </div>
 
-      {/* LINHA 4: Metas dos vendedores */}
-      {rank.length > 0 && (
-        <div className="mt-3.5 bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5">
-            <div>
-              <p className="text-sm font-semibold text-white">Meta dos Vendedores</p>
-              <p className="text-[10px] text-white/30">{mesNome()}</p>
-            </div>
-            <Link href="/funcionarios" className="text-[10px] text-white/40 hover:text-white transition-colors">
-              Gerenciar →
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {rank.map((r: any) => {
-              const meta = r.meta_mensal ?? 0
-              const pct = meta > 0 ? Math.min(100, r.fat / meta * 100) : 0
-              const barColor = pct >= 100 ? '#34d399' : pct >= 70 ? '#4f7eff' : pct >= 40 ? '#fbbf24' : '#f87171'
-              return (
-                <div key={r.id} className="p-4 border-r border-b border-white/5">
-                  <div className="flex items-center gap-2 mb-2.5">
-                    <div className="w-6 h-6 rounded-lg bg-[#4f7eff]/15 text-[#4f7eff] flex items-center justify-center text-[9px] font-bold">
-                      {r.iniciais ?? ini(r.nome)}
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-white">{r.nome}</p>
-                      <p className="text-[10px] text-white/30">{r.qtd} venda(s) · com. {fmt(r.com)}</p>
-                    </div>
-                    {pct >= 100 && (
-                      <span className="ml-auto text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-full font-bold">
-                        🏆 Meta
-                      </span>
-                    )}
+      {/* Mix do estoque + Meta do mês */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 mb-3.5">
+
+        {/* Mix do estoque */}
+        <div className="rounded-[10px] p-4" style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <p className="text-sm font-medium mb-4" style={{ color: '#e8e8ec' }}>Mix do estoque</p>
+          {(() => {
+            const max = Math.max(investN, investU, 1)
+            return (
+              <div className="flex flex-col gap-3">
+                <div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span style={{ color: '#8a8b94' }}>Novos · {novos.length}</span>
+                    <span style={{ color: '#e8e8ec' }}>{fmt(investN)}</span>
                   </div>
-                  {meta > 0 ? (
-                    <>
-                      <div className="flex justify-between text-[10px] text-white/30 mb-1">
-                        <span>{fmt(r.fat)}</span>
-                        <span>{pct.toFixed(0)}% de {fmt(meta)}</span>
-                      </div>
-                      <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: barColor }} />
-                      </div>
-                    </>
-                  ) : (
-                    <p className="text-[10px] text-white/20">Sem meta definida</p>
-                  )}
+                  <div className="h-2 rounded-full overflow-hidden" style={{ background: '#1f2230' }}>
+                    <div className="h-full rounded-full" style={{ width: `${(investN / max) * 100}%`, background: '#60a5fa' }} />
+                  </div>
                 </div>
-              )
-            })}
-          </div>
+                <div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span style={{ color: '#8a8b94' }}>Usados · {usados.length}</span>
+                    <span style={{ color: '#e8e8ec' }}>{fmt(investU)}</span>
+                  </div>
+                  <div className="h-2 rounded-full overflow-hidden" style={{ background: '#1f2230' }}>
+                    <div className="h-full rounded-full" style={{ width: `${(investU / max) * 100}%`, background: '#f59e0b' }} />
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
         </div>
+
+        {/* Meta do mês */}
+        <div className="rounded-[10px] p-4" style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <p className="text-sm font-medium mb-4" style={{ color: '#e8e8ec' }}>Meta do mês</p>
+          {lojaMeta && metaPct !== null ? (
+            <>
+              <div className="flex justify-between text-[12px] mb-1.5">
+                <span style={{ color: '#e8e8ec' }}>{fmt(fatMes)} de {fmt(lojaMeta)}</span>
+                <span style={{ color: '#34d399' }}>{metaPct.toFixed(0)}%</span>
+              </div>
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: '#1f2230' }}>
+                <div className="h-full rounded-full" style={{ width: `${metaPct}%`, background: '#34d399' }} />
+              </div>
+              <p className="text-[11px] mt-2" style={{ color: '#8a8b94' }}>
+                Faltam {fmt(Math.max(0, lojaMeta - fatMes))} · {diasFaltam} dia(s) restante(s)
+              </p>
+            </>
+          ) : (
+            <div className="flex flex-col items-start gap-2">
+              <p className="text-xs" style={{ color: '#6b6c75' }}>Nenhuma meta definida para este mês.</p>
+              <Link href="/configuracoes" className="text-[11px] font-medium" style={{ color: '#60a5fa' }}>
+                Defina sua meta do mês →
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Comissão dos vendedores */}
+      <CommissionRanking ranking={rank} mes={periodoLabel[periodo]} />
+    </div>
+  )
+}
+
+function Kpi1({ label, value, color, variacao }: { label: string; value: string; color: string; variacao: number | null }) {
+  return (
+    <div className="rounded-[10px] p-3.5" style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}>
+      <p className="text-[10px] font-medium uppercase tracking-wide mb-2" style={{ color: '#8a8b94' }}>{label}</p>
+      <p className="text-lg font-medium tracking-tight" style={{ color }}>{value}</p>
+      {variacao !== null && (
+        <p className="text-[11px] mt-1 font-medium" style={{ color: variacao >= 0 ? '#34d399' : '#f87171' }}>
+          {variacao >= 0 ? '▲' : '▼'} {Math.abs(variacao)}% vs período ant.
+        </p>
       )}
     </div>
   )
 }
 
+function Kpi2({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div className="rounded-[10px] p-3" style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}>
+      <p className="text-[10px] font-medium uppercase tracking-wide mb-1.5" style={{ color: '#8a8b94' }}>{label}</p>
+      <p className="text-sm font-medium" style={{ color }}>{value}</p>
+    </div>
+  )
+}
+
 // ── Main page ──────────────────────────────────────────────────────
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ periodo?: string; novo?: string }>
+}) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -592,7 +706,7 @@ export default async function DashboardPage() {
   return (
     <>
       <TrackConversion />
-      <AdminDashboard lojaId={usuario.loja_id} />
+      <AdminDashboard lojaId={usuario.loja_id} searchParams={searchParams} />
     </>
   )
 }
