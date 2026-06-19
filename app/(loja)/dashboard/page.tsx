@@ -7,6 +7,10 @@ import TrackConversion from '@/components/dashboard/track-conversion'
 import PeriodSelector from '@/components/dashboard/period-selector'
 import RevenueChart from '@/components/dashboard/revenue-chart'
 import CommissionRanking from '@/components/dashboard/commission-ranking'
+import GreetingHero from '@/components/dashboard/greeting-hero'
+import InsightBanner from '@/components/dashboard/insight-banner'
+import MiniStat from '@/components/dashboard/mini-stat'
+import AnimatedPanel from '@/components/dashboard/animated-panel'
 
 // ── helpers ────────────────────────────────────────────────────────
 function daysDiff(dateStr: string) {
@@ -255,7 +259,7 @@ async function CEODashboard() {
 }
 
 // ── Admin Dashboard ────────────────────────────────────────────────
-async function AdminDashboard({ lojaId, searchParams }: { lojaId: string; searchParams: Promise<{ periodo?: string }> }) {
+async function AdminDashboard({ lojaId, nome, searchParams }: { lojaId: string; nome: string; searchParams: Promise<{ periodo?: string }> }) {
   const supabase = await createClient()
   const { periodo: periodoParam } = await searchParams
   const periodo = periodoParam ?? '30d'
@@ -402,77 +406,44 @@ async function AdminDashboard({ lojaId, searchParams }: { lojaId: string; search
   const diasFaltam = diasNoMes - hoje.getDate()
 
   return (
-    <div className="p-4 sm:p-6 max-w-[1400px]" style={{ background: '#0b0c11' }}>
+    <div className="p-5 sm:p-8 max-w-[1400px]" style={{ background: 'var(--app-bg-base)' }}>
 
-      {/* TOPBAR */}
-      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-        <div>
-          <p className="text-base font-medium" style={{ color: '#e8e8ec' }}>Dashboard</p>
-          <p className="text-[11px] capitalize" style={{ color: '#8a8b94' }}>{mesNome()}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <PeriodSelector atual={periodo} />
-          <button
-            className="relative w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a8b94" strokeWidth="2">
-              <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-            {alertas.length > 0 && (
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full" style={{ background: '#f59e0b' }} />
-            )}
-          </button>
-        </div>
-      </div>
+      <GreetingHero
+        nome={nome}
+        faturamento={fat}
+        faturamentoVar={fatVar}
+        lucro={luc}
+        periodoLabel={periodoLabel[periodo]}
+        metaPct={lojaMeta ? metaPct : null}
+        metaValor={lojaMeta}
+        periodoSelector={<PeriodSelector atual={periodo} />}
+      />
 
       {/* Faixa Saúde da operação */}
-      <div className="rounded-[10px] px-4 py-3 mb-3.5 flex items-center gap-2"
+      <AnimatedPanel delay={0.05} hover={false} className="rounded-2xl px-4 py-3 mb-3.5 flex items-center gap-2"
         style={{ background: saude.bg, border: `1px solid ${saude.border}` }}>
         <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: saude.color }} />
         <p className="text-[13px] font-medium" style={{ color: saude.color }}>{saude.label}</p>
-        <p className="text-[12px]" style={{ color: '#8a8b94' }}>{saude.msg}</p>
-      </div>
+        <p className="text-[12px]" style={{ color: 'var(--app-ink-secondary)' }}>{saude.msg}</p>
+      </AnimatedPanel>
 
-      {/* KPIs nível 1 */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mb-2.5">
-        <Kpi1 label="Faturamento" value={fmt(fat)} color="#34d399" variacao={fatVar} />
-        <Kpi1 label="Lucro previsto" value={fmt(luc)} color="#34d399" variacao={lucVar} />
-        <Kpi1 label="Ticket médio" value={fmt(ticket)} color="#e8e8ec" variacao={ticketVar} />
-        <Kpi1 label="Entrada em caixa" value={fmt(entrada)} color="#60a5fa" variacao={entradaVar} />
-      </div>
+      <InsightBanner alertas={alertas} />
 
-      {/* KPIs nível 2 */}
+      {/* Métricas de apoio */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-2.5 mb-3.5">
-        <Kpi2 label="Valor em estoque" value={fmt(invest)} color="#a78bfa" />
-        <Kpi2 label="Novos" value={String(novos.length)} color="#e8e8ec" />
-        <Kpi2 label="Usados" value={String(usados.length)} color="#e8e8ec" />
-        <Kpi2 label="Negociação" value={String(negoc)} color="#e8e8ec" />
-        <Kpi2 label="Comissões" value={fmt(com)} color="#f59e0b" />
+        <MiniStat label="Ticket médio" value={ticket} delay={0.1} />
+        <MiniStat label="Entrada em caixa" value={entrada} color="#60a5fa" delay={0.13} />
+        <MiniStat label="Valor em estoque" value={invest} color="#a78bfa" delay={0.16} />
+        <MiniStat label="Comissões" value={com} color="#f59e0b" delay={0.19} />
+        <MiniStat label="Em negociação" value={negoc} kind="int" delay={0.22} />
       </div>
 
-      {/* Faixa de alertas */}
-      {alertas.length > 0 && (
-        <div className="rounded-[10px] p-4 mb-3.5" style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.20)' }}>
-          <div className="flex items-start gap-2.5">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" className="mt-0.5 flex-shrink-0">
-              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <path d="M12 9v4M12 17h.01" />
-            </svg>
-            <div className="flex flex-col gap-1">
-              {alertas.map((a, i) => <p key={i} className="text-[12px]" style={{ color: '#e8e8ec' }}>{a}</p>)}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Gráfico de faturamento */}
-      <div className="rounded-[10px] mb-3.5 p-4" style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}>
+      {/* Gráfico de faturamento — peça larga */}
+      <AnimatedPanel delay={0.1} hover={false} className="rounded-2xl mb-3.5 p-5" style={{ background: 'var(--app-bg-surface)' }}>
         <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-medium" style={{ color: '#e8e8ec' }}>Faturamento · {periodoLabel[periodo]}</p>
+          <p className="text-sm font-medium" style={{ color: 'var(--app-ink-primary)' }}>Faturamento · {periodoLabel[periodo]}</p>
           {fatVar !== null && (
-            <span className="text-[11px] font-semibold" style={{ color: fatVar >= 0 ? '#34d399' : '#f87171' }}>
+            <span className="text-[11px] font-semibold" style={{ color: fatVar >= 0 ? 'var(--app-profit)' : 'var(--app-alert)' }}>
               {fatVar >= 0 ? '▲' : '▼'} {Math.abs(fatVar)}% vs período ant.
             </span>
           )}
@@ -481,65 +452,65 @@ async function AdminDashboard({ lojaId, searchParams }: { lojaId: string; search
           <RevenueChart serie={serie} />
         ) : (
           <div className="flex items-center justify-center" style={{ height: 96 }}>
-            <p className="text-[12px] text-center" style={{ color: '#6b6c75' }}>
+            <p className="text-[12px] text-center" style={{ color: 'var(--app-ink-tertiary)' }}>
               Ainda juntando dados — registre vendas para ver sua curva de faturamento.
             </p>
           </div>
         )}
-      </div>
+      </AnimatedPanel>
 
-      {/* Últimas vendas + Melhor vendedor + Top modelos */}
+      {/* Últimas vendas + Melhor vendedor + Top modelos — composição assimétrica */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.55fr_1fr] gap-3.5 mb-3.5">
 
         {/* Últimas vendas */}
-        <div className="rounded-[10px] overflow-hidden" style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <p className="text-sm font-medium" style={{ color: '#e8e8ec' }}>Últimas vendas</p>
+        <AnimatedPanel delay={0.15} className="rounded-2xl overflow-hidden" style={{ background: 'var(--app-bg-surface)' }}>
+          <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid var(--app-hairline)' }}>
+            <p className="text-sm font-medium" style={{ color: 'var(--app-ink-primary)' }}>Últimas vendas</p>
             <Link href="/vendas" className="text-[11px]" style={{ color: '#60a5fa' }}>Ver todas →</Link>
           </div>
           {ultVendas.length === 0 ? (
             <div className="flex flex-col items-center py-10">
-              <p className="text-sm" style={{ color: '#6b6c75' }}>Nenhuma venda no período.</p>
+              <p className="text-sm" style={{ color: 'var(--app-ink-tertiary)' }}>Nenhuma venda no período.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[420px]">
                 <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <tr style={{ borderBottom: '1px solid var(--app-hairline)' }}>
                     {['Data', 'Cliente', 'Valor', 'Lucro'].map(h => (
-                      <th key={h} className="text-left text-[10px] font-medium px-5 py-2.5" style={{ color: '#6b6c75' }}>{h}</th>
+                      <th key={h} className="text-left text-[10px] font-medium px-5 py-2.5" style={{ color: 'var(--app-ink-tertiary)' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {ultVendas.map((v: any) => (
-                    <tr key={v.id} className="last:border-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                      <td className="px-5 py-2.5 text-[11px]" style={{ color: '#8a8b94' }}>{fdBR(v.data_venda?.split('T')[0])}</td>
-                      <td className="px-5 py-2.5 text-xs font-medium" style={{ color: '#e8e8ec' }}>{v.cliente_nome}</td>
-                      <td className="px-5 py-2.5 text-xs font-mono" style={{ color: '#e8e8ec' }}>{fmt(v.valor_total)}</td>
-                      <td className="px-5 py-2.5 text-xs font-mono text-right" style={{ color: '#34d399' }}>{fmt(v.lucro)}</td>
+                    <tr key={v.id} className="last:border-0" style={{ borderBottom: '1px solid var(--app-hairline)' }}>
+                      <td className="px-5 py-2.5 text-[11px]" style={{ color: 'var(--app-ink-secondary)' }}>{fdBR(v.data_venda?.split('T')[0])}</td>
+                      <td className="px-5 py-2.5 text-xs font-medium" style={{ color: 'var(--app-ink-primary)' }}>{v.cliente_nome}</td>
+                      <td className="px-5 py-2.5 text-xs font-mono" style={{ color: 'var(--app-ink-primary)' }}>{fmt(v.valor_total)}</td>
+                      <td className="px-5 py-2.5 text-xs font-mono text-right" style={{ color: 'var(--app-profit)' }}>{fmt(v.lucro)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
-        </div>
+        </AnimatedPanel>
 
         {/* Coluna direita */}
         <div className="flex flex-col gap-3.5">
 
           {/* Melhor vendedor */}
-          <div className="rounded-[10px] overflow-hidden" style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <AnimatedPanel delay={0.2} className="rounded-2xl overflow-hidden" style={{ background: 'var(--app-bg-surface)' }}>
+            <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid var(--app-hairline)' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2">
                 <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 4H4a2 2 0 0 0 0 4M17 4h3a2 2 0 0 1 0 4" />
               </svg>
-              <p className="text-xs font-medium" style={{ color: '#e8e8ec' }}>Melhor vendedor</p>
+              <p className="text-xs font-medium" style={{ color: 'var(--app-ink-primary)' }}>Melhor vendedor</p>
             </div>
             {!best || best.fat === 0 ? (
               <div className="px-4 py-5 text-center">
-                <p className="text-xs" style={{ color: '#6b6c75' }}>Sem vendas no período.</p>
+                <p className="text-xs" style={{ color: 'var(--app-ink-tertiary)' }}>Sem vendas no período.</p>
               </div>
             ) : (
               <div className="p-4">
@@ -549,35 +520,35 @@ async function AdminDashboard({ lojaId, searchParams }: { lojaId: string; search
                     {best.iniciais ?? ini(best.nome)}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: '#e8e8ec' }}>{best.nome}</p>
-                    <p className="text-[11px]" style={{ color: '#8a8b94' }}>{best.qtd} venda(s) · {fmt(best.fat)}</p>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--app-ink-primary)' }}>{best.nome}</p>
+                    <p className="text-[11px]" style={{ color: 'var(--app-ink-secondary)' }}>{best.qtd} venda(s) · {fmt(best.fat)}</p>
                   </div>
                 </div>
               </div>
             )}
-          </div>
+          </AnimatedPanel>
 
           {/* Top modelos */}
-          <div className="rounded-[10px] overflow-hidden flex-1" style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              <p className="text-xs font-medium" style={{ color: '#e8e8ec' }}>Top modelos vendidos</p>
+          <AnimatedPanel delay={0.25} className="rounded-2xl overflow-hidden flex-1" style={{ background: 'var(--app-bg-surface)' }}>
+            <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--app-hairline)' }}>
+              <p className="text-xs font-medium" style={{ color: 'var(--app-ink-primary)' }}>Top modelos vendidos</p>
             </div>
             {topModelos.length === 0 ? (
               <div className="px-4 py-5 text-center">
-                <p className="text-xs" style={{ color: '#6b6c75' }}>Sem dados no período.</p>
+                <p className="text-xs" style={{ color: 'var(--app-ink-tertiary)' }}>Sem dados no período.</p>
               </div>
             ) : (
               <div>
                 {topModelos.map(([modelo, qtd], i) => {
                   const pct = (qtd / topModelos[0][1] * 100)
                   return (
-                    <div key={modelo} className="flex items-center gap-2.5 px-4 py-2.5 last:border-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div key={modelo} className="flex items-center gap-2.5 px-4 py-2.5 last:border-0" style={{ borderBottom: '1px solid var(--app-hairline)' }}>
                       <div className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0"
                         style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa' }}>
                         {i + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-medium truncate" style={{ color: '#e8e8ec' }}>{modelo}</p>
+                        <p className="text-[11px] font-medium truncate" style={{ color: 'var(--app-ink-primary)' }}>{modelo}</p>
                         <div className="h-0.5 rounded-full mt-1 overflow-hidden" style={{ background: '#1f2230' }}>
                           <div className="h-full rounded-full" style={{ width: `${pct}%`, background: '#60a5fa' }} />
                         </div>
@@ -588,7 +559,7 @@ async function AdminDashboard({ lojaId, searchParams }: { lojaId: string; search
                 })}
               </div>
             )}
-          </div>
+          </AnimatedPanel>
         </div>
       </div>
 
@@ -596,16 +567,16 @@ async function AdminDashboard({ lojaId, searchParams }: { lojaId: string; search
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 mb-3.5">
 
         {/* Mix do estoque */}
-        <div className="rounded-[10px] p-4" style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <p className="text-sm font-medium mb-4" style={{ color: '#e8e8ec' }}>Mix do estoque</p>
+        <AnimatedPanel delay={0.3} className="rounded-2xl p-5" style={{ background: 'var(--app-bg-surface)' }}>
+          <p className="text-sm font-medium mb-4" style={{ color: 'var(--app-ink-primary)' }}>Mix do estoque</p>
           {(() => {
             const max = Math.max(investN, investU, 1)
             return (
               <div className="flex flex-col gap-3">
                 <div>
                   <div className="flex justify-between text-[11px] mb-1">
-                    <span style={{ color: '#8a8b94' }}>Novos · {novos.length}</span>
-                    <span style={{ color: '#e8e8ec' }}>{fmt(investN)}</span>
+                    <span style={{ color: 'var(--app-ink-secondary)' }}>Novos · {novos.length}</span>
+                    <span style={{ color: 'var(--app-ink-primary)' }}>{fmt(investN)}</span>
                   </div>
                   <div className="h-2 rounded-full overflow-hidden" style={{ background: '#1f2230' }}>
                     <div className="h-full rounded-full" style={{ width: `${(investN / max) * 100}%`, background: '#60a5fa' }} />
@@ -613,8 +584,8 @@ async function AdminDashboard({ lojaId, searchParams }: { lojaId: string; search
                 </div>
                 <div>
                   <div className="flex justify-between text-[11px] mb-1">
-                    <span style={{ color: '#8a8b94' }}>Usados · {usados.length}</span>
-                    <span style={{ color: '#e8e8ec' }}>{fmt(investU)}</span>
+                    <span style={{ color: 'var(--app-ink-secondary)' }}>Usados · {usados.length}</span>
+                    <span style={{ color: 'var(--app-ink-primary)' }}>{fmt(investU)}</span>
                   </div>
                   <div className="h-2 rounded-full overflow-hidden" style={{ background: '#1f2230' }}>
                     <div className="h-full rounded-full" style={{ width: `${(investU / max) * 100}%`, background: '#f59e0b' }} />
@@ -623,63 +594,43 @@ async function AdminDashboard({ lojaId, searchParams }: { lojaId: string; search
               </div>
             )
           })()}
-        </div>
+        </AnimatedPanel>
 
         {/* Meta do mês */}
-        <div className="rounded-[10px] p-4" style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <p className="text-sm font-medium mb-4" style={{ color: '#e8e8ec' }}>Meta do mês</p>
+        <AnimatedPanel delay={0.35} className="rounded-2xl p-5" style={{ background: 'var(--app-bg-surface)' }}>
+          <p className="text-sm font-medium mb-4" style={{ color: 'var(--app-ink-primary)' }}>Meta do mês</p>
           {lojaMeta && metaPct !== null ? (
             <>
               <div className="flex justify-between text-[12px] mb-1.5">
-                <span style={{ color: '#e8e8ec' }}>{fmt(fatMes)} de {fmt(lojaMeta)}</span>
-                <span style={{ color: '#34d399' }}>{metaPct.toFixed(0)}%</span>
+                <span style={{ color: 'var(--app-ink-primary)' }}>{fmt(fatMes)} de {fmt(lojaMeta)}</span>
+                <span style={{ color: 'var(--app-profit)' }}>{metaPct.toFixed(0)}%</span>
               </div>
               <div className="h-2 rounded-full overflow-hidden" style={{ background: '#1f2230' }}>
-                <div className="h-full rounded-full" style={{ width: `${metaPct}%`, background: '#34d399' }} />
+                <div className="h-full rounded-full" style={{ width: `${metaPct}%`, background: 'var(--app-profit)' }} />
               </div>
-              <p className="text-[11px] mt-2" style={{ color: '#8a8b94' }}>
+              <p className="text-[11px] mt-2" style={{ color: 'var(--app-ink-secondary)' }}>
                 Faltam {fmt(Math.max(0, lojaMeta - fatMes))} · {diasFaltam} dia(s) restante(s)
               </p>
             </>
           ) : (
             <div className="flex flex-col items-start gap-2">
-              <p className="text-xs" style={{ color: '#6b6c75' }}>Nenhuma meta definida para este mês.</p>
+              <p className="text-xs" style={{ color: 'var(--app-ink-tertiary)' }}>Nenhuma meta definida para este mês.</p>
               <Link href="/configuracoes" className="text-[11px] font-medium" style={{ color: '#60a5fa' }}>
                 Defina sua meta do mês →
               </Link>
             </div>
           )}
-        </div>
+        </AnimatedPanel>
       </div>
 
       {/* Comissão dos vendedores */}
-      <CommissionRanking ranking={rank} mes={periodoLabel[periodo]} />
+      <AnimatedPanel delay={0.4} hover={false}>
+        <CommissionRanking ranking={rank} mes={periodoLabel[periodo]} />
+      </AnimatedPanel>
     </div>
   )
 }
 
-function Kpi1({ label, value, color, variacao }: { label: string; value: string; color: string; variacao: number | null }) {
-  return (
-    <div className="rounded-[10px] p-3.5" style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}>
-      <p className="text-[10px] font-medium uppercase tracking-wide mb-2" style={{ color: '#8a8b94' }}>{label}</p>
-      <p className="text-lg font-medium tracking-tight" style={{ color }}>{value}</p>
-      {variacao !== null && (
-        <p className="text-[11px] mt-1 font-medium" style={{ color: variacao >= 0 ? '#34d399' : '#f87171' }}>
-          {variacao >= 0 ? '▲' : '▼'} {Math.abs(variacao)}% vs período ant.
-        </p>
-      )}
-    </div>
-  )
-}
-
-function Kpi2({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div className="rounded-[10px] p-3" style={{ background: '#14151c', border: '1px solid rgba(255,255,255,0.06)' }}>
-      <p className="text-[10px] font-medium uppercase tracking-wide mb-1.5" style={{ color: '#8a8b94' }}>{label}</p>
-      <p className="text-sm font-medium" style={{ color }}>{value}</p>
-    </div>
-  )
-}
 
 // ── Main page ──────────────────────────────────────────────────────
 export default async function DashboardPage({
@@ -706,7 +657,7 @@ export default async function DashboardPage({
   return (
     <>
       <TrackConversion />
-      <AdminDashboard lojaId={usuario.loja_id} searchParams={searchParams} />
+      <AdminDashboard lojaId={usuario.loja_id} nome={usuario.nome} searchParams={searchParams} />
     </>
   )
 }

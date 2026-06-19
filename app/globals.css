@@ -3,6 +3,18 @@
 :root {
   --color-primary: #4f7eff;
   --color-secondary: #0e1018;
+
+  /* Design tokens — app autenticado (loja). Independentes do branding
+     white-label (--color-primary/--color-secondary, que vêm da loja). */
+  --app-bg-base: #0a0a0c;
+  --app-bg-surface: #131316;
+  --app-bg-elevated: #1a1a1f;
+  --app-ink-primary: #f5f5f7;
+  --app-ink-secondary: #8e8e96;
+  --app-ink-tertiary: #55555c;
+  --app-profit: #34d399;
+  --app-alert: #f87171;
+  --app-hairline: rgba(255, 255, 255, 0.06);
 }
 
 * {
