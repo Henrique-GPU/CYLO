@@ -23,6 +23,9 @@ export default async function FuncionariosPage() {
     .neq('id', user.id)
     .order('nome')
 
+  const totalVendedores = (funcionarios ?? []).filter((f: any) => f.perfil === 'vendedor').length
+  const limiteAtingido = totalVendedores >= 3
+
   const inicio = new Date()
   const inicioMes = new Date(inicio.getFullYear(), inicio.getMonth(), 1).toISOString().split('T')[0]
 
@@ -47,9 +50,12 @@ export default async function FuncionariosPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-white">Funcionários</h1>
-          <p className="text-sm text-white/40 mt-0.5">{funcionarios?.length ?? 0} na equipe</p>
+          <p className="text-sm text-white/40 mt-0.5">
+            {funcionarios?.length ?? 0} na equipe
+            {isAdmin && <span className="text-white/25"> · {totalVendedores}/3 vendedores</span>}
+          </p>
         </div>
-        {isAdmin && (
+        {isAdmin && !limiteAtingido && (
           <Link
             href="/funcionarios/novo"
             className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] hover:opacity-90 text-white text-sm font-medium rounded-xl transition-opacity"

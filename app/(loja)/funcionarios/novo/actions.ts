@@ -27,6 +27,16 @@ export async function criarFuncionario(formData: FormData) {
 
   const admin = createAdminClient()
 
+  const { count: totalVendedores } = await admin
+    .from('usuarios')
+    .select('id', { count: 'exact', head: true })
+    .eq('loja_id', usuario.loja_id)
+    .eq('perfil', 'vendedor')
+
+  if ((totalVendedores ?? 0) >= 3) {
+    return { error: 'Limite de 3 vendedores por loja atingido.' }
+  }
+
   const nome = formData.get('nome') as string
   const email = formData.get('email') as string
   const perfil = 'vendedor' // admin só pode criar vendedores
