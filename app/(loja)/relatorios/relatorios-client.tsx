@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { fmt } from '@/lib/utils/format'
 import { FileBarChart, Printer, Package, TrendingUp } from 'lucide-react'
@@ -455,124 +456,136 @@ export default function RelatoriosClient({ lojaId, userId, perfil, nomeUsuario, 
   }
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'vendas', label: 'Relatório de Vendas', icon: <TrendingUp size={15} /> },
-    { id: 'estoque', label: 'Relatório de Estoque', icon: <Package size={15} /> },
-    ...(isAdmin ? [{ id: 'financeiro' as Tab, label: 'Relatório Financeiro', icon: <FileBarChart size={15} /> }] : []),
+    { id: 'vendas', label: 'Vendas', icon: <TrendingUp size={15} /> },
+    { id: 'estoque', label: 'Estoque', icon: <Package size={15} /> },
+    ...(isAdmin ? [{ id: 'financeiro' as Tab, label: 'Financeiro', icon: <FileBarChart size={15} /> }] : []),
   ]
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-5 sm:p-8 max-w-3xl" style={{ background: 'var(--app-bg-base)' }}>
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-white">Relatórios</h1>
-        <p className="text-sm text-white/40 mt-0.5">Gere relatórios em PDF para impressão ou envio</p>
+        <h1 className="text-xl font-medium" style={{ color: 'var(--app-ink-primary)' }}>Relatórios</h1>
+        <p className="text-sm mt-0.5" style={{ color: 'var(--app-ink-secondary)' }}>Gere relatórios em PDF para impressão ou envio</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-1 mb-6 rounded-xl p-1 w-full sm:w-fit overflow-x-auto" style={{ background: 'var(--app-bg-surface)' }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${tab === t.id
-              ? 'bg-[#4f7eff]/15 border border-[#4f7eff]/30 text-[#4f7eff]'
-              : 'border border-white/10 text-white/50 hover:text-white hover:border-white/20'}`}>
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 whitespace-nowrap"
+            style={tab === t.id
+              ? { background: '#4f7eff', color: 'white' }
+              : { color: 'var(--app-ink-secondary)' }}>
             {t.icon}{t.label}
           </button>
         ))}
       </div>
 
       {/* Panel */}
-      <div className="bg-white/3 border border-white/8 rounded-2xl p-6 space-y-5">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={tab}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="rounded-2xl p-6 space-y-5"
+          style={{ background: 'var(--app-bg-surface)' }}
+        >
 
-        {tab === 'vendas' && (
-          <>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/30 mb-3">
-                {isAdmin ? 'Relatório completo de vendas com lucro, comissões e trocas' : 'Suas vendas no período'}
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="lbl-r">Data inicial</label>
-                  <input type="date" value={vDataDe} onChange={e => setVDataDe(e.target.value)} className="fld-r" />
-                </div>
-                <div>
-                  <label className="lbl-r">Data final</label>
-                  <input type="date" value={vDataAte} onChange={e => setVDataAte(e.target.value)} className="fld-r" />
-                </div>
-                {isAdmin && vendedores.length > 0 && (
-                  <div className="col-span-2">
-                    <label className="lbl-r">Filtrar por vendedor</label>
-                    <select value={vVendedor} onChange={e => setVVendedor(e.target.value)} className="fld-r">
-                      <option value="todos">Todos os vendedores</option>
-                      {vendedores.map(v => <option key={v.id} value={v.id}>{v.nome}</option>)}
-                    </select>
+          {tab === 'vendas' && (
+            <>
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--app-ink-tertiary)' }}>
+                  {isAdmin ? 'Relatório completo de vendas com lucro, comissões e trocas' : 'Suas vendas no período'}
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="lbl-r">Data inicial</label>
+                    <input type="date" value={vDataDe} onChange={e => setVDataDe(e.target.value)} className="fld-r" />
                   </div>
-                )}
-              </div>
-            </div>
-            <div className="bg-white/3 border border-white/8 rounded-xl p-3 text-[11px] text-white/40">
-              {isAdmin
-                ? '✓ Inclui: faturamento, lucro, margem, comissões por vendedor, trocas recebidas, formas de pagamento'
-                : '✓ Inclui: lista das suas vendas, clientes, produtos, valores e formas de pagamento'}
-            </div>
-            <button onClick={gerarVendas} disabled={loading}
-              className="w-full py-3 bg-[#4f7eff] hover:opacity-90 text-white font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-40 transition-opacity">
-              <Printer size={16} />{loading ? 'Gerando...' : 'Gerar Relatório de Vendas'}
-            </button>
-          </>
-        )}
-
-        {tab === 'estoque' && (
-          <>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/30 mb-3">
-                {isAdmin ? 'Inventário completo com custos e valor investido' : 'Aparelhos disponíveis no estoque'}
-              </p>
-              <div>
-                <label className="lbl-r">Tipo de aparelho</label>
-                <div className="flex gap-2">
-                  {['todos', 'novo', 'usado'].map(t => (
-                    <button key={t} onClick={() => setETipo(t)}
-                      className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors capitalize ${eTipo === t
-                        ? 'border-[#4f7eff] bg-[#4f7eff]/15 text-[#4f7eff]'
-                        : 'border-white/10 text-white/40 hover:border-white/20'}`}>
-                      {t === 'todos' ? 'Todos' : t === 'novo' ? 'Lacrados' : 'Usados'}
-                    </button>
-                  ))}
+                  <div>
+                    <label className="lbl-r">Data final</label>
+                    <input type="date" value={vDataAte} onChange={e => setVDataAte(e.target.value)} className="fld-r" />
+                  </div>
+                  {isAdmin && vendedores.length > 0 && (
+                    <div className="col-span-2">
+                      <label className="lbl-r">Filtrar por vendedor</label>
+                      <select value={vVendedor} onChange={e => setVVendedor(e.target.value)} className="fld-r">
+                        <option value="todos">Todos os vendedores</option>
+                        {vendedores.map(v => <option key={v.id} value={v.id}>{v.nome}</option>)}
+                      </select>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-            <div className="bg-white/3 border border-white/8 rounded-xl p-3 text-[11px] text-white/40">
-              {isAdmin
-                ? '✓ Inclui: custo de aquisição, preço de venda, margem potencial, IMEI, status de cada aparelho'
-                : '✓ Inclui: modelo, capacidade, cor, estado, bateria, preço e status'}
-            </div>
-            <button onClick={gerarEstoque} disabled={loading}
-              className="w-full py-3 bg-[#4f7eff] hover:opacity-90 text-white font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-40 transition-opacity">
-              <Printer size={16} />{loading ? 'Gerando...' : 'Gerar Relatório de Estoque'}
-            </button>
-          </>
-        )}
-
-        {tab === 'financeiro' && isAdmin && (
-          <>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/30 mb-3">
-                DRE simplificado do mês com ranking de vendedores e trocas
-              </p>
-              <div>
-                <label className="lbl-r">Mês de referência</label>
-                <input type="month" value={fMes} onChange={e => setFMes(e.target.value)} className="fld-r max-w-xs" />
+              <div className="rounded-xl p-3 text-[11px]" style={{ background: 'rgba(255,255,255,0.03)', color: 'var(--app-ink-secondary)' }}>
+                {isAdmin
+                  ? '✓ Inclui: faturamento, lucro, margem, comissões por vendedor, trocas recebidas, formas de pagamento'
+                  : '✓ Inclui: lista das suas vendas, clientes, produtos, valores e formas de pagamento'}
               </div>
-            </div>
-            <div className="bg-white/3 border border-white/8 rounded-xl p-3 text-[11px] text-white/40">
-              ✓ Inclui: faturamento, lucro líquido, comissões, entrada de caixa, ranking de vendedores, trocas recebidas
-            </div>
-            <button onClick={gerarFinanceiro} disabled={loading}
-              className="w-full py-3 bg-[#4f7eff] hover:opacity-90 text-white font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-40 transition-opacity">
-              <Printer size={16} />{loading ? 'Gerando...' : 'Gerar Relatório Financeiro'}
-            </button>
-          </>
-        )}
-      </div>
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={gerarVendas} disabled={loading}
+                className="w-full py-3 bg-[#4f7eff] hover:opacity-90 text-white font-medium rounded-xl flex items-center justify-center gap-2 disabled:opacity-40 transition-opacity">
+                <Printer size={16} />{loading ? 'Gerando...' : 'Gerar relatório de vendas'}
+              </motion.button>
+            </>
+          )}
+
+          {tab === 'estoque' && (
+            <>
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--app-ink-tertiary)' }}>
+                  {isAdmin ? 'Inventário completo com custos e valor investido' : 'Aparelhos disponíveis no estoque'}
+                </p>
+                <div>
+                  <label className="lbl-r">Tipo de aparelho</label>
+                  <div className="flex gap-2">
+                    {['todos', 'novo', 'usado'].map(t => (
+                      <button key={t} onClick={() => setETipo(t)}
+                        className="flex-1 py-2 rounded-xl text-sm font-medium border transition-colors capitalize"
+                        style={eTipo === t
+                          ? { borderColor: '#4f7eff', background: 'rgba(79,126,255,0.15)', color: '#4f7eff' }
+                          : { borderColor: 'var(--app-hairline)', color: 'var(--app-ink-secondary)' }}>
+                        {t === 'todos' ? 'Todos' : t === 'novo' ? 'Lacrados' : 'Usados'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-xl p-3 text-[11px]" style={{ background: 'rgba(255,255,255,0.03)', color: 'var(--app-ink-secondary)' }}>
+                {isAdmin
+                  ? '✓ Inclui: custo de aquisição, preço de venda, margem potencial, IMEI, status de cada aparelho'
+                  : '✓ Inclui: modelo, capacidade, cor, estado, bateria, preço e status'}
+              </div>
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={gerarEstoque} disabled={loading}
+                className="w-full py-3 bg-[#4f7eff] hover:opacity-90 text-white font-medium rounded-xl flex items-center justify-center gap-2 disabled:opacity-40 transition-opacity">
+                <Printer size={16} />{loading ? 'Gerando...' : 'Gerar relatório de estoque'}
+              </motion.button>
+            </>
+          )}
+
+          {tab === 'financeiro' && isAdmin && (
+            <>
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--app-ink-tertiary)' }}>
+                  DRE simplificado do mês com ranking de vendedores e trocas
+                </p>
+                <div>
+                  <label className="lbl-r">Mês de referência</label>
+                  <input type="month" value={fMes} onChange={e => setFMes(e.target.value)} className="fld-r max-w-xs" />
+                </div>
+              </div>
+              <div className="rounded-xl p-3 text-[11px]" style={{ background: 'rgba(255,255,255,0.03)', color: 'var(--app-ink-secondary)' }}>
+                ✓ Inclui: faturamento, lucro líquido, comissões, entrada de caixa, ranking de vendedores, trocas recebidas
+              </div>
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={gerarFinanceiro} disabled={loading}
+                className="w-full py-3 bg-[#4f7eff] hover:opacity-90 text-white font-medium rounded-xl flex items-center justify-center gap-2 disabled:opacity-40 transition-opacity">
+                <Printer size={16} />{loading ? 'Gerando...' : 'Gerar relatório financeiro'}
+              </motion.button>
+            </>
+          )}
+        </motion.div>
+      </AnimatePresence>
 
       <style jsx global>{`
         .fld-r {
@@ -581,18 +594,18 @@ export default function RelatoriosClient({ lojaId, userId, perfil, nomeUsuario, 
           border: 1px solid rgba(255,255,255,.1);
           border-radius: .625rem;
           padding: .5rem .875rem;
-          color: white;
+          color: var(--app-ink-primary);
           font-size: .8125rem;
           outline: none;
           margin-top: .375rem;
         }
         .fld-r:focus { border-color: #4f7eff; }
-        .fld-r option { background: #0e1018; }
+        .fld-r option { background: var(--app-bg-elevated); }
         .lbl-r {
           display: block;
           font-size: .625rem;
           font-weight: 600;
-          color: rgba(255,255,255,.35);
+          color: var(--app-ink-tertiary);
           text-transform: uppercase;
           letter-spacing: .05em;
         }

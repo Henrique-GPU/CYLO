@@ -27,3 +27,22 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* Cylo Document — imprime apenas o documento comercial (orçamento/recibo),
+   nunca o restante da aplicação. Mesma fonte de verdade da tela e do papel. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .cylo-print-area,
+  .cylo-print-area * {
+    visibility: visible;
+  }
+  .cylo-print-area {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    margin: 0;
+    overflow: visible !important;
+  }
+}

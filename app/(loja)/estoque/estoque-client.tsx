@@ -83,12 +83,12 @@ export default function EstoqueClient({ aparelhos, isAdmin }: { aparelhos: any[]
   return (
     <div>
       {/* Tabs */}
-      <div className="flex gap-1 mb-5 rounded-xl p-1 w-fit" style={{ background: 'var(--app-bg-surface)' }}>
+      <div className="flex gap-1 mb-5 rounded-xl p-1 w-full sm:w-fit overflow-x-auto" style={{ background: 'var(--app-bg-surface)' }}>
         {tabList.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 whitespace-nowrap"
             style={tab === t.key
               ? { background: '#4f7eff', color: 'white' }
               : { color: 'var(--app-ink-secondary)' }}
@@ -105,7 +105,7 @@ export default function EstoqueClient({ aparelhos, isAdmin }: { aparelhos: any[]
       {/* ── Tab: Cards (visão primária) ──────────────────────────────── */}
       {tab === 'cards' && (
         aparelhos.length === 0 ? empty : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3.5">
             {aparelhos.map((a: any, i: number) => {
               const isNew = a.tipo === 'novo'
               const dias = daysSince(a.data_entrada)

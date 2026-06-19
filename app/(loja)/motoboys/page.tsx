@@ -44,8 +44,8 @@ export default async function MotoboysPage() {
         </div>
       ) : (
         <>
-          <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
-            <table className="w-full">
+          <div className="bg-white/3 border border-white/8 rounded-2xl overflow-x-auto">
+            <table className="w-full min-w-[600px]">
               <thead>
                 <tr className="border-b border-white/5">
                   <th className="text-left text-xs text-white/30 font-medium px-5 py-3">Nome</th>

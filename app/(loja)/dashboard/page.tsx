@@ -406,7 +406,7 @@ async function AdminDashboard({ lojaId, nome, searchParams }: { lojaId: string; 
   const diasFaltam = diasNoMes - hoje.getDate()
 
   return (
-    <div className="p-5 sm:p-8 max-w-[1400px]" style={{ background: 'var(--app-bg-base)' }}>
+    <div className="p-5 sm:p-8" style={{ background: 'var(--app-bg-base)' }}>
 
       <GreetingHero
         nome={nome}

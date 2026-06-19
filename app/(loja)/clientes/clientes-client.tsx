@@ -79,7 +79,7 @@ export default function ClientesClient({
   )
 
   return (
-    <div className="p-5 sm:p-8 max-w-2xl" style={{ background: 'var(--app-bg-base)' }}>
+    <div className="p-5 sm:p-8 max-w-6xl" style={{ background: 'var(--app-bg-base)' }}>
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-lg font-medium" style={{ color: 'var(--app-ink-primary)' }}>Clientes</h1>

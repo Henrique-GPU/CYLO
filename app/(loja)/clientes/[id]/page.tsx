@@ -53,7 +53,7 @@ export default async function ClienteDetalhe({
 
   return (
     <PageFadeIn>
-      <div className="p-5 sm:p-6 max-w-2xl" style={{ background: 'var(--app-bg-base)' }}>
+      <div className="p-5 sm:p-6 max-w-4xl" style={{ background: 'var(--app-bg-base)' }}>
         {/* Back */}
         <Link href="/clientes" className="flex items-center gap-1.5 text-xs mb-5 transition-colors" style={{ color: 'var(--app-ink-tertiary)' }}>
           <ArrowLeft size={13} />Voltar para Clientes

@@ -2,14 +2,17 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import { fmt } from '@/lib/utils/format'
 import { createClient } from '@/lib/supabase/client'
 import { salvarTrocaNoEstoque } from '@/app/(loja)/nova-venda/actions'
 import {
   Check, ChevronDown, ChevronUp, Plus, X,
   MessageCircle, Printer, ArrowRight, Smartphone,
-  CheckCircle2, Clock,
 } from 'lucide-react'
+import ResumoPanel from './resumo-panel'
+import ResumoMobileBar from './resumo-mobile-bar'
+import CyloDocument from './cylo-document'
 
 // ── types ──────────────────────────────────────────────────────────
 interface AcessorioItem { id: string; nome: string; preco: number; custo: number; quantidade: number }
@@ -48,31 +51,41 @@ function Block({
   open: boolean; onToggle: () => void; children: React.ReactNode
 }) {
   return (
-    <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden mb-2.5">
+    <div className="rounded-2xl overflow-hidden mb-2.5" style={{ background: 'var(--app-bg-surface)' }}>
       <div
-        className="flex items-center justify-between px-4 py-3.5 cursor-pointer hover:bg-white/2 transition-colors"
+        className="flex items-center justify-between px-4 py-3.5 cursor-pointer transition-colors hover:bg-white/[0.02]"
         onClick={onToggle}
       >
         <div className="flex items-center gap-3">
-          <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+          <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-semibold flex-shrink-0"
             style={{ background: 'rgba(79,126,255,.15)', color: '#4f7eff' }}>
             {num}
           </div>
           <div>
-            <p className="text-sm font-semibold text-white">{title}</p>
-            {sub && <p className="text-[10px] text-white/30 mt-0.5">{sub}</p>}
+            <p className="text-sm font-medium" style={{ color: 'var(--app-ink-primary)' }}>{title}</p>
+            {sub && <p className="text-[10px] mt-0.5" style={{ color: 'var(--app-ink-tertiary)' }}>{sub}</p>}
           </div>
         </div>
         <div className="flex items-center gap-2">
           {badge}
-          {open ? <ChevronUp size={14} className="text-white/30" /> : <ChevronDown size={14} className="text-white/30" />}
+          {open ? <ChevronUp size={14} style={{ color: 'var(--app-ink-tertiary)' }} /> : <ChevronDown size={14} style={{ color: 'var(--app-ink-tertiary)' }} />}
         </div>
       </div>
-      {open && (
-        <div className="px-4 pb-4 border-t border-white/5 pt-3">
-          {children}
-        </div>
-      )}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: 'easeInOut' }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div className="px-4 pb-4 pt-3" style={{ borderTop: '1px solid var(--app-hairline)' }}>
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -175,262 +188,47 @@ function DocPreviewModal({
   }
 
   function imprimir() {
-    const lojaIni = (loja.nome || '').slice(0, 2).toUpperCase()
-    const pgtoEntries = Object.entries(pgtos).filter(([, v]) => parseFloat(v) > 0)
-
-    const html = `<!DOCTYPE html><html lang="pt-BR"><head>
-<meta charset="UTF-8"/>
-<title>${tipo === 'orcamento' ? 'Orçamento' : 'Recibo'} — ${loja.nome}</title>
-<style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;color:#111827;background:white}
-  .page{max-width:580px;margin:0 auto;padding:40px 36px}
-  .header{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding-bottom:24px;border-bottom:1px solid #f3f4f6}
-  .logo{height:80px;max-width:200px;object-fit:contain;display:block;margin-bottom:16px}
-  .logo-ini{width:80px;height:80px;border-radius:16px;color:white;font-size:24px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
-  .loja-nome{font-size:15px;font-weight:700;color:#111827}
-  .loja-info{font-size:11px;color:#9ca3af;margin-top:3px}
-  .header-right{text-align:right;flex-shrink:0}
-  .doc-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;margin-bottom:8px}
-  .badge-pago{display:inline-block;background:#ecfdf5;color:#059669;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:4px 10px;border-radius:999px;border:1px solid #d1fae5}
-  .badge-orc{display:inline-block;background:#fffbeb;color:#d97706;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:4px 10px;border-radius:999px;border:1px solid #fde68a}
-  .doc-date{font-size:11px;color:#9ca3af;margin-top:8px}
-  .section{padding:20px 0;border-bottom:1px solid #f3f4f6}
-  .section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;margin-bottom:10px}
-  .cliente-nome{font-size:15px;font-weight:600;color:#111827}
-  .cliente-tel{font-size:12px;color:#9ca3af;margin-top:3px}
-  .item-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid #f9fafb}
-  .item-row:last-child{border-bottom:none}
-  .item-nome{font-size:14px;font-weight:600;color:#111827}
-  .item-sub{font-size:11px;color:#9ca3af;margin-top:2px;font-family:'Courier New',monospace}
-  .item-valor{font-size:14px;font-weight:600;color:#111827;white-space:nowrap}
-  .item-troca-nome{font-size:13px;color:#6b7280}
-  .item-troca-sub{font-size:11px;color:#9ca3af;margin-top:2px}
-  .item-troca-valor{font-size:14px;font-weight:600;color:#d97706;white-space:nowrap}
-  .item-ac-nome{font-size:13px;color:#374151}
-  .item-ac-valor{font-size:13px;color:#374151;white-space:nowrap}
-  .pgto-row{display:flex;justify-content:space-between;padding:5px 0}
-  .pgto-lbl{font-size:13px;color:#6b7280}
-  .pgto-val{font-size:13px;color:#374151}
-  .total-band{background:#030712;border-radius:14px;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;margin:20px 0}
-  .total-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.35)}
-  .total-val{font-size:30px;font-weight:900;color:white}
-  .garantia-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-  .garantia-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;margin-bottom:3px}
-  .garantia-val{font-size:13px;font-weight:600;color:#374151}
-  .garantia-ate{font-size:11px;color:#9ca3af}
-  .footer{padding-top:20px;margin-top:8px;border-top:1px solid #f3f4f6;text-align:center;font-size:9px;color:#d1d5db;text-transform:uppercase;letter-spacing:.08em}
-  @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}.page{padding:24px}}
-</style></head><body>
-<div class="page">
-  <div class="header">
-    <div>
-      ${loja.logo_url
-        ? `<img src="${loja.logo_url}" class="logo" alt="${loja.nome}"/>`
-        : `<div class="logo-ini" style="background:${cor}">${lojaIni}</div>`}
-      <div class="loja-nome">${loja.nome}</div>
-      ${loja.whatsapp ? `<div class="loja-info">${loja.whatsapp}</div>` : ''}
-      ${loja.instagram ? `<div class="loja-info">${loja.instagram}</div>` : ''}
-      ${loja.endereco ? `<div class="loja-info">${loja.endereco}</div>` : ''}
-    </div>
-    <div class="header-right">
-      <div class="doc-label">${tipo === 'orcamento' ? 'Orçamento' : 'Recibo de Venda'}</div>
-      ${tipo === 'recibo' ? `<span class="badge-pago">Pago</span>` : `<span class="badge-orc">Aguardando</span>`}
-      <div class="doc-date">${hoje}${vendedorNome ? `<br/>${vendedorNome}` : ''}</div>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-label">Para</div>
-    <div class="cliente-nome">${clienteNome}</div>
-    ${clienteTel ? `<div class="cliente-tel">${clienteTel}</div>` : ''}
-  </div>
-
-  <div class="section">
-    ${aparelho ? `<div class="item-row">
-      <div>
-        <div class="item-nome">${[aparelho?.modelo, aparelho?.capacidade, aparelho?.cor].filter(Boolean).join(' ')}</div>
-        ${aparelho?.imei ? `<div class="item-sub">IMEI ${aparelho.imei}</div>` : ''}
-      </div>
-      <div class="item-valor">${fmt(preco)}</div>
-    </div>` : ''}
-    ${comTroca && valorTroca > 0 ? `<div class="item-row">
-      <div>
-        <div class="item-troca-nome">Troca — ${trocaModelo}</div>
-        ${trocaEstado ? `<div class="item-troca-sub">${trocaEstado}${trocaBateria ? ` · ${trocaBateria}%` : ''}</div>` : ''}
-        ${trocaImei ? `<div class="item-troca-sub" style="font-family:monospace">IMEI ${trocaImei}</div>` : ''}
-        ${trocaObs ? `<div class="item-troca-sub" style="font-style:italic">${trocaObs}</div>` : ''}
-      </div>
-      <div class="item-troca-valor">− ${fmt(valorTroca)}</div>
-    </div>` : ''}
-    ${acessoriosSel.map(a => `<div class="item-row">
-      <div class="item-ac-nome">${a.nome}${a.quantidade > 1 ? ` × ${a.quantidade}` : ''}</div>
-      <div class="item-ac-valor">${fmt(a.preco * a.quantidade)}</div>
-    </div>`).join('')}
-  </div>
-
-  ${pgtoEntries.length > 0 ? `<div class="section">
-    <div class="section-label">Pagamento</div>
-    ${pgtoEntries.map(([k, v]) => `<div class="pgto-row"><span class="pgto-lbl">${pgtoLabel[k]}</span><span class="pgto-val">${fmt(parseFloat(v))}</span></div>`).join('')}
-  </div>` : ''}
-
-  <div class="total-band">
-    <span class="total-lbl">Total</span>
-    <span class="total-val">${fmt(clientePaga)}</span>
-  </div>
-
-  ${garantia ? `<div class="garantia-box">
-    <div>
-      <div class="garantia-lbl">Garantia</div>
-      <div class="garantia-val">${garantia} dias</div>
-    </div>
-    ${garantiaValidade ? `<div class="garantia-ate">até ${garantiaValidade}</div>` : ''}
-  </div>` : ''}
-
-  <div class="footer">Gerado pelo CYLO · ${loja.nome}</div>
-</div>
-</body></html>`
-
-    const win = window.open('', '_blank', 'width=750,height=900')
-    if (!win) return
-    win.document.write(html)
-    win.document.close()
-    win.focus()
-    setTimeout(() => { win.print() }, 600)
+    window.print()
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 print:p-0 print:bg-white"
       style={{ background: 'rgba(0,0,0,.8)', backdropFilter: 'blur(6px)' }}>
-      <div className="bg-white rounded-3xl w-full max-w-md max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <div className="bg-white rounded-3xl w-full max-w-md max-h-[92vh] flex flex-col shadow-2xl overflow-hidden relative print:max-h-none print:rounded-none print:shadow-none">
 
-        {/* Header — brand */}
-        <div className="px-8 pt-7 pb-6 flex-shrink-0 border-b border-gray-100 relative">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              {loja.logo_url ? (
-                <img src={loja.logo_url} alt={loja.nome}
-                  className="h-36 max-w-[220px] object-contain mb-4"
-                  onError={e => {
-                    const t = e.currentTarget
-                    t.style.display = 'none'
-                    const fb = t.nextElementSibling as HTMLElement | null
-                    if (fb) fb.style.display = 'flex'
-                  }}
-                />
-              ) : null}
-              <div className="w-14 h-14 rounded-2xl mb-4 flex items-center justify-center text-xl font-black text-white"
-                style={{ backgroundColor: cor, display: loja.logo_url ? 'none' : 'flex' }}>
-                {(loja.nome || '').slice(0, 2).toUpperCase()}
-              </div>
-              <p className="text-[15px] font-bold text-gray-900 leading-tight">{loja.nome}</p>
-              <div className="mt-1 space-y-0.5">
-                {loja.whatsapp && <p className="text-xs text-gray-400">{loja.whatsapp}</p>}
-                {loja.instagram && <p className="text-xs text-gray-400">{loja.instagram}</p>}
-                {loja.endereco && <p className="text-xs text-gray-400">{loja.endereco}</p>}
-              </div>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
-                {tipo === 'orcamento' ? 'ORÇAMENTO' : 'RECIBO DE VENDA'}
-              </p>
-              {tipo === 'recibo' ? (
-                <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full border border-emerald-100">
-                  <CheckCircle2 size={10} />Pago
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-600 text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full border border-amber-100">
-                  <Clock size={10} />Aguardando
-                </span>
-              )}
-              <p className="text-xs text-gray-400 mt-2">{hoje}</p>
-            </div>
-          </div>
-          <button onClick={onClose}
-            className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
-            <X size={14} className="text-gray-500" />
-          </button>
-        </div>
+        <button onClick={onClose}
+          className="absolute top-4 right-4 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors print:hidden">
+          <X size={14} className="text-gray-500" />
+        </button>
 
-        {/* Body */}
-        <div className="overflow-y-auto flex-1 px-8 py-0">
-
-          {/* Cliente */}
-          <div className="py-5 border-b border-gray-100">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Para</p>
-            <p className="text-[15px] font-semibold text-gray-900">{clienteNome}</p>
-            {clienteTel && <p className="text-sm text-gray-400 mt-0.5">{clienteTel}</p>}
-          </div>
-
-          {/* Itens */}
-          <div className="py-5 space-y-4 border-b border-gray-100">
-            {aparelho && (
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <p className="text-[14px] font-semibold text-gray-900">
-                    {[aparelho?.modelo, aparelho?.capacidade, aparelho?.cor].filter(Boolean).join(' ')}
-                  </p>
-                  {aparelho?.imei && <p className="text-xs text-gray-400 font-mono mt-0.5">IMEI {aparelho.imei}</p>}
-                </div>
-                <p className="text-[14px] font-semibold text-gray-900 tabular-nums">{fmt(preco)}</p>
-              </div>
-            )}
-            {comTroca && valorTroca > 0 && (
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <p className="text-[13px] text-gray-500">Troca — {trocaModelo}</p>
-                  {trocaEstado && <p className="text-xs text-gray-400 mt-0.5 capitalize">{trocaEstado}{trocaBateria ? ` · ${trocaBateria}%` : ''}</p>}
-                  {trocaImei && <p className="text-xs text-gray-400 font-mono mt-0.5">IMEI {trocaImei}</p>}
-                  {trocaObs && <p className="text-xs text-gray-400 mt-0.5 italic">{trocaObs}</p>}
-                </div>
-                <p className="text-[14px] font-semibold text-amber-500 tabular-nums">− {fmt(valorTroca)}</p>
-              </div>
-            )}
-            {acessoriosSel.map(a => (
-              <div key={a.id} className="flex items-center justify-between gap-4">
-                <p className="text-[13px] text-gray-600">{a.nome}{a.quantidade > 1 ? <span className="text-gray-400"> × {a.quantidade}</span> : ''}</p>
-                <p className="text-[13px] text-gray-900 tabular-nums">{fmt(a.preco * a.quantidade)}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Pagamento */}
-          {Object.entries(pgtos).some(([, v]) => parseFloat(v) > 0) && (
-            <div className="py-5 border-b border-gray-100 space-y-2">
-              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Pagamento</p>
-              {Object.entries(pgtos).filter(([, v]) => parseFloat(v) > 0).map(([k, v]) => (
-                <div key={k} className="flex items-center justify-between">
-                  <p className="text-sm text-gray-500">{pgtoLabel[k]}</p>
-                  <p className="text-sm text-gray-700 tabular-nums">{fmt(parseFloat(v))}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Total */}
-          <div className="mt-5 rounded-2xl bg-gray-950 px-6 py-5 flex items-center justify-between">
-            <span className="text-xs font-semibold text-white/40 uppercase tracking-widest">Total</span>
-            <span className="text-[28px] font-black text-white tabular-nums leading-none">{fmt(clientePaga)}</span>
-          </div>
-
-          {/* Garantia */}
-          {garantia && (
-            <div className="mt-4 flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50 border border-gray-100">
-              <div>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-0.5">Garantia</p>
-                <p className="text-sm font-semibold text-gray-700">{garantia} dias</p>
-              </div>
-              {garantiaValidade && <p className="text-xs text-gray-400">até {garantiaValidade}</p>}
-            </div>
-          )}
-
-          <div className="py-6 text-center">
-            <p className="text-[9px] text-gray-200 tracking-widest uppercase">Gerado pelo CYLO</p>
-          </div>
+        {/* Documento — única fonte de verdade para tela e impressão */}
+        <div className="overflow-y-auto flex-1 cylo-print-area">
+          <CyloDocument
+            estado={tipo === 'orcamento' ? 'proposta' : 'concluida'}
+            loja={loja}
+            clienteNome={clienteNome}
+            clienteTel={clienteTel}
+            aparelho={aparelho}
+            preco={preco}
+            comTroca={comTroca}
+            trocaModelo={trocaModelo}
+            trocaEstado={trocaEstado}
+            trocaBateria={trocaBateria}
+            trocaImei={trocaImei}
+            trocaObs={trocaObs}
+            valorTroca={valorTroca}
+            acessoriosSel={acessoriosSel}
+            acTotal={acTotal}
+            clientePaga={clientePaga}
+            pgtos={pgtos}
+            garantia={garantia}
+            garantiaValidade={garantiaValidade}
+            vendedorNome={vendedorNome}
+          />
         </div>
 
         {/* Actions */}
-        <div className="px-6 py-4 border-t border-gray-100 flex-shrink-0 space-y-2.5">
+        <div className="px-6 py-4 border-t border-gray-100 flex-shrink-0 space-y-2.5 print:hidden">
           <div className="flex gap-2">
             <button onClick={imprimir}
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium">
@@ -991,6 +789,28 @@ export default function VendaWizard({
     salvando,
   }
 
+  const resumoProps = {
+    clienteNome,
+    aparelhoLabel: aparelho ? `${aparelho.modelo} ${aparelho.capacidade}` : null,
+    preco,
+    comTroca,
+    valorTroca,
+    acTotal,
+    custoTotal,
+    clientePaga,
+    totalPago,
+    diffPgto,
+    garantia,
+    statusVenda,
+    comissao,
+    isEditMode,
+    salvando,
+    podeFechar: !!clienteNome && !!aparelhoId,
+    onSalvarOrcamento: () => salvar('orcamento'),
+    onIniciarFechamento: iniciarFechamento,
+    onVerOrcamento: verOrcamento,
+  }
+
   // ── renders ─────────────────────────────────────────────────────
 
   if (vendaFechada) {
@@ -1077,7 +897,7 @@ export default function VendaWizard({
       )}
 
       {/* ── Left: blocks ── */}
-      <div className="flex-1 p-6 overflow-y-auto">
+      <div className="flex-1 p-6 pb-32 lg:pb-6 overflow-y-auto">
         <div className="max-w-2xl">
           {erroSalvar && (
             <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-2">
@@ -1745,96 +1565,11 @@ export default function VendaWizard({
         </div>
       </div>
 
-      {/* ── Right: summary panel ── */}
-      <div className="hidden lg:flex w-64 border-l border-white/5 p-4 flex-col gap-3 overflow-y-auto flex-shrink-0">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Resumo</p>
-
-        <div className="space-y-2 text-xs">
-          <div className="flex justify-between">
-            <span className="text-white/40">Cliente</span>
-            <span className={clienteNome ? 'text-white font-medium' : 'text-white/20'}>{clienteNome || '–'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-white/40">Produto</span>
-            <span className="text-white text-right max-w-[130px] truncate">{aparelho ? `${aparelho.modelo} ${aparelho.capacidade}` : '–'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-white/40">Preço</span>
-            <span className="text-[#4f7eff] font-mono font-bold">{fmt(preco)}</span>
-          </div>
-          {comTroca && valorTroca > 0 && (
-            <div className="flex justify-between">
-              <span className="text-white/40">(−) Troca</span>
-              <span className="text-emerald-400 font-mono">− {fmt(valorTroca)}</span>
-            </div>
-          )}
-          {acTotal > 0 && (
-            <div className="flex justify-between">
-              <span className="text-white/40">(+) Acessórios</span>
-              <span className="text-[#4f7eff] font-mono">+ {fmt(acTotal)}</span>
-            </div>
-          )}
-          {custoTotal > 0 && (
-            <div className="flex justify-between">
-              <span className="text-white/40">Custos op.</span>
-              <span className="text-red-400 font-mono">− {fmt(custoTotal)}</span>
-            </div>
-          )}
-        </div>
-
-        <div className="border-t border-white/10 pt-3">
-          <span className="text-xs font-bold text-white/60">Cliente Paga</span>
-          <p className="text-3xl font-black text-white mt-0.5 tracking-tight">{fmt(clientePaga)}</p>
-          {totalPago > 0 && (
-            <p className={`text-xs mt-1 font-mono ${Math.abs(diffPgto) < 1 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-              Pgto: {fmt(totalPago)} {Math.abs(diffPgto) > 0.5 && `(diff: ${fmt(diffPgto)})`}
-            </p>
-          )}
-        </div>
-
-        <div className="border-t border-white/10 pt-3 space-y-1.5 text-xs">
-          <div className="flex justify-between">
-            <span className="text-white/30">Garantia</span>
-            <span className="text-white/50 text-right max-w-[120px] text-[10px]">{garantia}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-white/30">Status</span>
-            <Badge color={statusVenda === 'Convertido em Venda' ? 'green' : statusVenda === 'Perdido' ? 'red' : 'yellow'}>
-              {statusVenda}
-            </Badge>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-white/30">Comissão</span>
-            <span className="text-yellow-400 font-mono">{fmt(comissao)}</span>
-          </div>
-        </div>
-
-        <div className="border-t border-white/10 pt-3 space-y-2 mt-auto">
-          {isEditMode ? (
-            <>
-              <button onClick={() => salvar('orcamento')} disabled={salvando || !clienteNome || !aparelhoId}
-                className="w-full py-2 border border-white/15 text-white text-xs rounded-xl hover:bg-white/5 disabled:opacity-30 transition-colors">
-                💾 Salvar
-              </button>
-              <button onClick={iniciarFechamento} disabled={salvando || !clienteNome || !aparelhoId}
-                className="w-full py-2 bg-emerald-500 hover:opacity-90 text-white text-xs font-semibold rounded-xl disabled:opacity-30 transition-opacity">
-                ✓ Converter em Venda
-              </button>
-            </>
-          ) : (
-            <>
-              <button onClick={verOrcamento} disabled={!clienteNome || !aparelhoId}
-                className="w-full py-2 border border-white/15 text-white text-xs rounded-xl hover:bg-white/5 disabled:opacity-30 transition-colors">
-                📄 Orçamento
-              </button>
-              <button onClick={iniciarFechamento} disabled={salvando || !clienteNome || !aparelhoId}
-                className="w-full py-2 bg-emerald-500 hover:opacity-90 text-white text-xs font-semibold rounded-xl disabled:opacity-30 transition-opacity">
-                ✓ Fechar Venda
-              </button>
-            </>
-          )}
-        </div>
+      {/* ── Right: summary panel (desktop) + sticky bar (mobile) ── */}
+      <div className="hidden lg:flex w-64 p-4 flex-col overflow-y-auto flex-shrink-0" style={{ borderLeft: '1px solid var(--app-hairline)' }}>
+        <ResumoPanel {...resumoProps} />
       </div>
+      <ResumoMobileBar {...resumoProps} />
 
       <style jsx global>{`
         .inp {

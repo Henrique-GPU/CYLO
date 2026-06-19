@@ -49,8 +49,8 @@ export default function GreetingHero({
         <StatNumber
           value={faturamento}
           format={fmt}
-          className="font-semibold tracking-tight"
-          style={{ fontSize: 56, lineHeight: 1, color: 'var(--app-ink-primary)' }}
+          className="font-semibold tracking-tight text-[34px] sm:text-[44px] lg:text-[56px]"
+          style={{ lineHeight: 1, color: 'var(--app-ink-primary)' }}
         />
         {faturamentoVar !== null && (
           <motion.span

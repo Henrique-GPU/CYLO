@@ -36,8 +36,8 @@ export default async function PrecosPage() {
           {series.map(serie => (
             <div key={serie}>
               <h2 className="text-xs font-semibold text-white/40 mb-3 uppercase tracking-widest">iPhone {serie}</h2>
-              <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
-                <table className="w-full">
+              <div className="bg-white/3 border border-white/8 rounded-2xl overflow-x-auto">
+                <table className="w-full min-w-[640px]">
                   <thead>
                     <tr className="border-b border-white/5">
                       <th className="text-left text-xs text-white/30 font-medium px-5 py-3">Modelo</th>

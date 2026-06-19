@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { fmt } from '@/lib/utils/format'
 import { mesAtual } from '@/lib/utils/date'
-import KpiCard from '@/components/dashboard/kpi-card'
+import FinanceiroHero from '@/components/financeiro/financeiro-hero'
+import AnimatedPanel from '@/components/dashboard/animated-panel'
 
 export default async function FinanceiroPage() {
   const supabase = await createClient()
@@ -39,60 +40,30 @@ export default async function FinanceiroPage() {
   }
 
   return (
-    <div className="p-8 max-w-5xl">
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-white">Financeiro</h1>
-        <p className="text-sm text-white/40 mt-0.5">{mesAtual()} · {v.length} vendas</p>
-      </div>
+    <div className="p-5 sm:p-8" style={{ background: 'var(--app-bg-base)' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-8 items-start">
+        <FinanceiroHero lucro={lucro} receita={receita} comissoes={comissoes} margemPct={margemPct} mes={mesAtual()} />
 
-      {/* DRE simplificado */}
-      <div className="bg-white/5 border border-white/8 rounded-2xl p-6 mb-6">
-        <h2 className="text-xs font-semibold text-white/40 uppercase tracking-widest mb-4">DRE — {mesAtual()}</h2>
-        <div className="space-y-3">
-          <div className="flex justify-between items-center py-2 border-b border-white/5">
-            <span className="text-sm text-white/70">Receita bruta</span>
-            <span className="text-sm font-semibold text-white">{fmt(receita)}</span>
-          </div>
-          <div className="flex justify-between items-center py-2 border-b border-white/5">
-            <span className="text-sm text-white/70">Comissões pagas</span>
-            <span className="text-sm text-red-400">− {fmt(comissoes)}</span>
-          </div>
-          <div className="flex justify-between items-center py-2">
-            <span className="text-sm font-semibold text-white">Lucro líquido</span>
-            <span className="text-lg font-bold text-emerald-400">{fmt(lucro)}</span>
-          </div>
-        </div>
-        <p className="text-xs text-white/30 mt-3">Margem: {margemPct}%</p>
-      </div>
-
-      {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <KpiCard label="Receita" value={fmt(receita)} />
-        <KpiCard label="Lucro" value={fmt(lucro)} />
-        <KpiCard label="Comissões" value={fmt(comissoes)} />
-        <KpiCard label="Margem" value={`${margemPct}%`} />
-      </div>
-
-      {/* Por forma de pagamento */}
-      <div className="bg-white/3 border border-white/8 rounded-2xl p-5">
-        <h2 className="text-xs font-semibold text-white/40 uppercase tracking-widest mb-4">Por forma de pagamento</h2>
-        <div className="space-y-2">
-          {Object.entries({ PIX: porForma.pix, Dinheiro: porForma.dinheiro, Débito: porForma.debito, Crédito: porForma.credito, Transferência: porForma.transferencia })
-            .filter(([, v]) => v > 0)
-            .sort(([, a], [, b]) => b - a)
-            .map(([label, valor]) => (
-              <div key={label} className="flex items-center gap-3">
-                <span className="text-sm text-white/50 w-28">{label}</span>
-                <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-[var(--color-primary)] rounded-full" style={{ width: `${receita > 0 ? (valor / receita) * 100 : 0}%` }} />
+        <AnimatedPanel delay={0.1} hover={false} className="rounded-2xl p-5" style={{ background: 'var(--app-bg-surface)' }}>
+          <p className="text-[11px] font-medium uppercase tracking-widest mb-4" style={{ color: 'var(--app-ink-tertiary)' }}>Por forma de pagamento</p>
+          <div className="space-y-3">
+            {Object.entries({ PIX: porForma.pix, Dinheiro: porForma.dinheiro, Débito: porForma.debito, Crédito: porForma.credito, Transferência: porForma.transferencia })
+              .filter(([, valor]) => valor > 0)
+              .sort(([, a], [, b]) => b - a)
+              .map(([label, valor]) => (
+                <div key={label} className="flex items-center gap-2 sm:gap-3">
+                  <span className="text-xs sm:text-sm w-16 sm:w-24 flex-shrink-0 truncate" style={{ color: 'var(--app-ink-secondary)' }}>{label}</span>
+                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                    <div className="h-full rounded-full" style={{ width: `${receita > 0 ? (valor / receita) * 100 : 0}%`, background: '#4f7eff' }} />
+                  </div>
+                  <span className="text-xs sm:text-sm w-20 sm:w-24 flex-shrink-0 text-right" style={{ color: 'var(--app-ink-primary)' }}>{fmt(valor)}</span>
                 </div>
-                <span className="text-sm text-white w-28 text-right">{fmt(valor)}</span>
-              </div>
-            ))}
-          {Object.values(porForma).every(v => v === 0) && (
-            <p className="text-sm text-white/30">Nenhuma venda no período</p>
-          )}
-        </div>
+              ))}
+            {Object.values(porForma).every(valor => valor === 0) && (
+              <p className="text-sm" style={{ color: 'var(--app-ink-tertiary)' }}>Nenhuma venda no período</p>
+            )}
+          </div>
+        </AnimatedPanel>
       </div>
     </div>
   )

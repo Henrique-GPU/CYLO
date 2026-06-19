@@ -25,7 +25,7 @@ export default async function EstoquePage() {
     .order('criado_em', { ascending: false })
 
   return (
-    <div className="p-5 sm:p-8 max-w-6xl" style={{ background: 'var(--app-bg-base)' }}>
+    <div className="p-5 sm:p-8" style={{ background: 'var(--app-bg-base)' }}>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-medium" style={{ color: 'var(--app-ink-primary)' }}>Estoque</h1>
