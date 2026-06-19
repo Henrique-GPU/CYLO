@@ -12,10 +12,6 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
     title: 'Cylo',
   },
-  icons: {
-    icon: '/cylo-logo.svg',
-    apple: '/cylo-logo.svg',
-  },
   openGraph: {
     title: 'Cylo — Gestão para lojas de iPhone',
     description: 'Controle vendas, estoque por IMEI, trocas, comissões e relatórios em uma única plataforma.',
