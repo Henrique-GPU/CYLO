@@ -18,19 +18,13 @@
       <stop offset="0%" stop-color="#2563eb"/>
       <stop offset="100%" stop-color="#60a5fa"/>
     </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="4" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
   </defs>
 
   <!-- Background -->
   <circle cx="100" cy="100" r="99" fill="url(#bg)"/>
 
-  <!-- Outer subtle glow ring -->
-  <circle cx="100" cy="100" r="97.5" fill="none" stroke="#3b82f6" stroke-width="0.6" opacity="0.25"/>
-  <!-- Main ring -->
-  <circle cx="100" cy="100" r="95.5" fill="none" stroke="url(#ringGrad)" stroke-width="3.5"/>
+  <!-- Main ring — single bold stroke, legible from 16px up -->
+  <circle cx="100" cy="100" r="94" fill="none" stroke="url(#ringGrad)" stroke-width="6"/>
 
   <!-- C shape: radius=56, opening ~100° to the right -->
   <!-- top: angle -50° from 3-o'clock → (136, 57) -->
@@ -39,19 +33,18 @@
     d="M 136 57 A 56 56 0 1 0 136 143"
     fill="none"
     stroke="url(#cGrad)"
-    stroke-width="23"
+    stroke-width="27"
     stroke-linecap="round"
-    filter="url(#glow)"
   />
 
   <!-- iPhone outline, centered at ~(96, 100) -->
-  <rect x="80" y="68" width="31" height="64" rx="5.5" ry="5.5"
-        fill="none" stroke="white" stroke-width="3.5" opacity="0.95"/>
+  <rect x="79" y="67" width="33" height="66" rx="6" ry="6"
+        fill="none" stroke="white" stroke-width="5"/>
   <!-- speaker bar -->
-  <rect x="91" y="74.5" width="13" height="2.8" rx="1.4" fill="white" opacity="0.38"/>
+  <rect x="90.5" y="74" width="14" height="3.4" rx="1.7" fill="white" opacity="0.55"/>
 
   <!-- Speed lines from phone right edge into C gap -->
-  <line x1="114" y1="88"  x2="146" y2="88"  stroke="url(#linesGrad)" stroke-width="5.5" stroke-linecap="round"/>
-  <line x1="114" y1="100" x2="141" y2="100" stroke="url(#linesGrad)" stroke-width="4.2" stroke-linecap="round"/>
-  <line x1="114" y1="112" x2="136" y2="112" stroke="url(#linesGrad)" stroke-width="3"   stroke-linecap="round"/>
+  <line x1="116" y1="88"  x2="148" y2="88"  stroke="url(#linesGrad)" stroke-width="7" stroke-linecap="round"/>
+  <line x1="116" y1="100" x2="142" y2="100" stroke="url(#linesGrad)" stroke-width="5.5" stroke-linecap="round"/>
+  <line x1="116" y1="112" x2="136" y2="112" stroke="url(#linesGrad)" stroke-width="4"   stroke-linecap="round"/>
 </svg>

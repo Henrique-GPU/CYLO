@@ -1,9 +1,17 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import MockupAnimado from '@/components/login/mockup-animado'
-import FAQAccordion from '@/components/landing/faq-accordion'
 import UtmCapture from '@/components/landing/utm-capture'
+import FAQAccordion from '@/components/landing/faq-accordion'
+import HeroScene from '@/components/landing/hero-scene'
+import { MeshBackground } from '@/components/landing/mesh-background'
+import PainSection from '@/components/landing/pain-section'
+import RevealSection from '@/components/landing/reveal-section'
+import FeatureBlock from '@/components/landing/feature-block'
+import { EstoqueMockup, VendaMockup, ComissaoMockup, RelatoriosMockup } from '@/components/landing/feature-mockups'
+import MetricsSection from '@/components/landing/metrics-section'
+import PricingSection from '@/components/landing/pricing-section'
+import CtaFinal from '@/components/landing/cta-final'
 
 const FOUNDER_WA = '5511932652082'
 const WA_LINK = `https://wa.me/${FOUNDER_WA}?text=${encodeURIComponent('Olá! Vi o Cylo e quero saber mais sobre como minha loja pode ter acesso.')}`
@@ -27,8 +35,8 @@ export default async function RootPage() {
       <UtmCapture />
 
       {/* ── HEADER ── */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
-        <div className="max-w-5xl mx-auto px-5 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-gray-100/80">
+        <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img src="/cylo-logo.svg" alt="Cylo" className="w-7 h-7" />
             <span className="font-black text-xl tracking-tight">CYLO</span>
@@ -40,205 +48,103 @@ export default async function RootPage() {
       </header>
 
       {/* ── HERO ── */}
-      <section className="bg-gradient-to-b from-indigo-50 via-indigo-50/50 to-white px-5 pt-16 pb-24">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <section className="relative px-5 pt-16 sm:pt-20 pb-12 overflow-hidden">
+        <MeshBackground variant="light" />
+        <div className="relative max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
-            {/* Copy */}
             <div>
-              <div className="inline-flex items-center gap-2 bg-indigo-100 rounded-full px-4 py-1.5 mb-7">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                <span className="text-xs font-bold text-indigo-700 uppercase tracking-wider">15 dias grátis · sem cartão</span>
+              <div className="inline-flex items-center gap-2 bg-[#4f7eff]/8 rounded-full px-4 py-1.5 mb-7">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#4f7eff] animate-pulse" />
+                <span className="text-xs font-bold text-[#4f7eff] uppercase tracking-wider">15 dias grátis · sem cartão</span>
               </div>
 
-              <h1 className="text-[40px] lg:text-5xl font-black tracking-tight leading-[1.08] mb-5 text-[#0f172a]">
-                O sistema feito pra quem vive de vender iPhone
+              <h1 className="text-[42px] sm:text-5xl lg:text-[56px] font-black tracking-tight leading-[1.05] mb-6 text-[#0f172a]">
+                Menos planilhas.<br />Mais vendas.
               </h1>
 
-              <p className="text-lg text-gray-500 leading-relaxed mb-8">
-                Controle o estoque por IMEI, as vendas, a comissão dos vendedores e o caixa da loja — tudo numa tela só.
+              <p className="text-lg text-gray-400 leading-relaxed mb-9 max-w-md">
+                O sistema feito para quem vive de vender iPhone. Estoque por IMEI, vendas, comissão e caixa — tudo numa tela só.
               </p>
 
-              <Link
-                href="/cadastro"
-                className="inline-flex items-center gap-2 bg-[#6366f1] hover:bg-[#4f51d9] text-white font-bold px-8 py-4 rounded-2xl text-base transition-colors shadow-lg shadow-indigo-200"
-              >
-                Criar conta grátis →
-              </Link>
-              <p className="text-sm text-gray-400 mt-3">15 dias grátis · sem cartão de crédito</p>
+              <div className="flex flex-wrap items-center gap-4">
+                <Link
+                  href="/cadastro"
+                  className="inline-flex items-center gap-2 bg-[#4f7eff] hover:bg-[#3d6eef] text-white font-bold px-8 py-4 rounded-2xl text-base transition-all shadow-lg shadow-[#4f7eff]/25 hover:shadow-xl hover:shadow-[#4f7eff]/30 hover:scale-[1.02]"
+                >
+                  Começar teste grátis →
+                </Link>
+                <a
+                  href={WA_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-[#0f172a] font-semibold px-6 py-4 rounded-2xl text-base border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+                >
+                  Ver demonstração
+                </a>
+              </div>
+              <p className="text-sm text-gray-400 mt-4">15 dias grátis · sem cartão de crédito</p>
             </div>
 
-            {/* Mockup */}
-            <div className="bg-[#0e1018] rounded-3xl p-6 lg:p-8 shadow-2xl shadow-slate-200">
-              <MockupAnimado />
-            </div>
-
+            <HeroScene />
           </div>
         </div>
       </section>
 
       {/* ── DOR ── */}
-      <section className="bg-white px-5 py-20">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-black text-center mb-3 tracking-tight leading-snug">
-            Controlar a loja na planilha<br className="hidden sm:block" /> (ou na cabeça) tá ficando insustentável?
-          </h2>
-          <p className="text-center text-gray-400 mb-12 max-w-md mx-auto text-sm leading-relaxed">
-            Se você se identificou com pelo menos uma situação abaixo, o Cylo foi feito pra você.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {([
-              { icon: '📱', text: 'Não sei exatamente quais aparelhos tenho em estoque nem onde está cada IMEI.' },
-              { icon: '💰', text: 'Fecho o mês sem saber direito quanto cada vendedor vendeu e quanto pagar de comissão.' },
-              { icon: '📊', text: 'O caixa da loja vive uma incógnita — entrou quanto, saiu quanto?' },
-            ] as const).map(({ icon, text }) => (
-              <div key={text} className="bg-red-50 border border-red-100 rounded-2xl p-6">
-                <span className="text-3xl mb-4 block">{icon}</span>
-                <p className="text-[15px] text-gray-700 leading-relaxed">{text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <PainSection />
 
-      {/* ── SOLUÇÃO ── */}
-      <section className="bg-gray-50 px-5 py-20">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-black text-center mb-12 tracking-tight">
-            O CYLO organiza sua loja inteira num lugar só
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {([
-              { icon: '📦', title: 'Estoque por IMEI', desc: 'Saiba na hora cada aparelho que entrou, vendeu ou está parado na prateleira.' },
-              { icon: '🤝', title: 'Vendas e comissão', desc: 'Cada venda registrada e a comissão do vendedor calculada sozinha, sem erro.' },
-              { icon: '💵', title: 'Caixa no controle', desc: 'Veja entradas, saídas e o resultado da loja sem abrir uma planilha sequer.' },
-              { icon: '🍎', title: 'Feito pra loja de iPhone', desc: 'Não é sistema genérico adaptado. É pensado do zero pro seu negócio.' },
-            ] as const).map(({ icon, title, desc }) => (
-              <div key={title} className="bg-white border border-gray-100 rounded-2xl p-7 shadow-sm">
-                <span className="text-3xl mb-4 block">{icon}</span>
-                <h3 className="font-bold text-[#0f172a] mb-2 text-base">{title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ── VIRADA ── */}
+      <RevealSection />
 
-      {/* ── COMO FUNCIONA ── */}
-      <section className="bg-white px-5 py-20">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-black text-center mb-14 tracking-tight">
-            Comece em menos de 5 minutos
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 mb-14">
-            {([
-              { num: '1', title: 'Crie sua conta grátis', desc: 'Leva 1 minuto. Só nome da loja, e-mail e senha. Sem cartão.' },
-              { num: '2', title: 'Cadastre seus aparelhos', desc: 'Sua loja já vem com um catálogo de modelos pronto pra você editar.' },
-              { num: '3', title: 'Venda e controle', desc: 'Registre vendas e acompanhe estoque, comissão e caixa em tempo real.' },
-            ] as const).map(({ num, title, desc }) => (
-              <div key={num} className="flex flex-col items-start">
-                <div className="w-11 h-11 rounded-xl bg-indigo-100 text-[#6366f1] font-black text-lg flex items-center justify-center mb-5 flex-shrink-0">
-                  {num}
-                </div>
-                <h3 className="font-bold text-[#0f172a] mb-2 text-base">{title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-          <div className="text-center">
-            <Link
-              href="/cadastro"
-              className="inline-flex items-center gap-2 bg-[#6366f1] hover:bg-[#4f51d9] text-white font-bold px-8 py-4 rounded-2xl text-base transition-colors shadow-lg shadow-indigo-200"
-            >
-              Criar conta grátis →
-            </Link>
-            <p className="text-sm text-gray-400 mt-3">15 dias grátis · sem cartão de crédito</p>
-          </div>
-        </div>
-      </section>
+      {/* ── FUNCIONALIDADES ── */}
+      <FeatureBlock
+        eyebrow="Estoque"
+        title="Cada aparelho, rastreado por IMEI."
+        description="Saiba exatamente o que entrou, o que vendeu e o que está parado na prateleira — sem depender de memória ou planilha."
+        mockup={<EstoqueMockup />}
+      />
+      <FeatureBlock
+        eyebrow="Vendas"
+        title="Venda com troca, sem dor de cabeça."
+        description="Registre a venda, o aparelho de troca e a forma de pagamento em um fluxo só. O sistema calcula o valor final automaticamente."
+        mockup={<VendaMockup />}
+        reverse
+      />
+      <FeatureBlock
+        eyebrow="Comissão"
+        title="Comissão calculada sozinha, sem erro."
+        description="Cada vendedor já vê quanto vendeu e quanto vai receber. Fim da planilha de fim de mês e das discussões sobre valores."
+        mockup={<ComissaoMockup />}
+      />
+      <FeatureBlock
+        eyebrow="Relatórios"
+        title="Sua loja, em números, na hora."
+        description="Faturamento, DRE, recibos e orçamentos prontos para exportar — sem abrir uma única planilha."
+        mockup={<RelatoriosMockup />}
+        reverse
+      />
 
-      {/* ── PROVA SOCIAL (placeholder até ter depoimentos reais) ── */}
-      <section className="bg-gray-50 px-5 py-16">
-        <div className="max-w-5xl mx-auto text-center">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Desenvolvido por quem entende do mercado</p>
-          <div className="inline-flex items-center gap-4 bg-white border border-gray-200 rounded-2xl px-7 py-5 shadow-sm">
-            <span className="text-3xl">🍎</span>
-            <div className="text-left">
-              <p className="text-sm font-bold text-[#0f172a]">Feito por quem entende de loja de celular</p>
-              <p className="text-xs text-gray-400 mt-0.5">Cada funcionalidade nasceu de uma dor real do mercado</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ── MÉTRICAS ── */}
+      <MetricsSection />
 
       {/* ── PREÇO ── */}
-      <section className="bg-white px-5 py-20">
-        <div className="max-w-md mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-black text-center mb-10 tracking-tight">
-            Um plano simples, sem pegadinha
-          </h2>
-          <div className="border-2 border-[#6366f1] rounded-3xl p-8 shadow-xl shadow-indigo-100">
-            <div className="inline-flex items-center gap-2 bg-indigo-50 rounded-full px-4 py-1.5 mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-              <span className="text-xs font-bold text-indigo-700 uppercase tracking-wider">15 dias grátis para começar</span>
-            </div>
-            <div className="flex items-end gap-1 mb-1">
-              <span className="text-5xl font-black text-[#0f172a]">R$ 59,90</span>
-              <span className="text-gray-400 text-sm mb-2">/mês</span>
-            </div>
-            <p className="text-gray-400 text-sm mb-8">Sem fidelidade. Cancela quando quiser.</p>
-            <ul className="text-sm text-gray-600 space-y-3 mb-8">
-              {[
-                'Estoque por IMEI ilimitado',
-                'Vendas com cálculo de comissão automático',
-                'Orçamentos e recibos profissionais',
-                'Dashboard em tempo real',
-                'Funciona no celular e no computador',
-              ].map(f => (
-                <li key={f} className="flex items-center gap-2.5">
-                  <span className="text-[#6366f1] font-bold">✓</span> {f}
-                </li>
-              ))}
-            </ul>
-            <Link
-              href="/cadastro"
-              className="block w-full bg-[#6366f1] hover:bg-[#4f51d9] text-white font-bold py-4 rounded-2xl text-base transition-colors text-center shadow-lg shadow-indigo-200"
-            >
-              Começar meus 15 dias grátis
-            </Link>
-            <p className="text-xs text-gray-400 mt-3 text-center">Sem cartão de crédito</p>
-          </div>
-        </div>
-      </section>
+      <PricingSection />
 
       {/* ── FAQ ── */}
-      <section className="bg-gray-50 px-5 py-20">
+      <section className="bg-gray-50 px-5 py-24">
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-black text-center mb-10 tracking-tight">Dúvidas frequentes</h2>
+          <h2 className="text-2xl sm:text-3xl font-black text-center mb-10 tracking-tight text-[#0f172a]">Dúvidas frequentes</h2>
           <FAQAccordion />
         </div>
       </section>
 
       {/* ── CTA FINAL ── */}
-      <section className="bg-[#6366f1] px-5 py-24">
-        <div className="max-w-xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-black text-white mb-3 tracking-tight leading-tight">
-            Pare de controlar<br />sua loja no escuro.
-          </h2>
-          <p className="text-indigo-200 text-base mb-8">Sua concorrência já está se organizando.</p>
-          <Link
-            href="/cadastro"
-            className="inline-flex items-center gap-2 bg-white text-[#6366f1] font-black px-8 py-4 rounded-2xl text-base hover:bg-indigo-50 transition-colors shadow-lg"
-          >
-            Criar conta grátis →
-          </Link>
-          <p className="text-indigo-300 text-sm mt-4">15 dias grátis · sem cartão · começa em 1 minuto</p>
-        </div>
-      </section>
+      <CtaFinal />
 
       {/* ── FOOTER ── */}
       <footer className="bg-white border-t border-gray-100 px-5 py-8">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <img src="/cylo-logo.svg" alt="Cylo" className="w-5 h-5 opacity-40" />
             <span className="text-sm text-gray-400">© {new Date().getFullYear()} CYLO · Para lojas de iPhone</span>

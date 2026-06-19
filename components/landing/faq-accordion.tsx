@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const FAQS = [
   {
@@ -29,9 +30,9 @@ export default function FAQAccordion() {
   const [open, setOpen] = useState<number | null>(null)
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       {FAQS.map((faq, i) => (
-        <div key={i} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        <div key={i} className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
           <button
             onClick={() => setOpen(open === i ? null : i)}
             className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors gap-4"
@@ -42,11 +43,21 @@ export default function FAQAccordion() {
               className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${open === i ? 'rotate-180' : ''}`}
             />
           </button>
-          {open === i && (
-            <div className="px-6 pb-5 text-sm text-gray-500 leading-relaxed border-t border-gray-100 pt-4">
-              {faq.a}
-            </div>
-          )}
+          <AnimatePresence initial={false}>
+            {open === i && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                className="overflow-hidden"
+              >
+                <div className="px-6 pb-5 text-sm text-gray-500 leading-relaxed border-t border-gray-100 pt-4">
+                  {faq.a}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       ))}
     </div>
