@@ -25,11 +25,11 @@ export default async function EstoquePage() {
     .order('criado_em', { ascending: false })
 
   return (
-    <div className="p-4 sm:p-8 max-w-6xl">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-5 sm:p-8 max-w-6xl" style={{ background: 'var(--app-bg-base)' }}>
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-white">Estoque</h1>
-          <p className="text-sm text-white/40 mt-0.5">
+          <h1 className="text-xl font-medium" style={{ color: 'var(--app-ink-primary)' }}>Estoque</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--app-ink-secondary)' }}>
             {(aparelhos ?? []).filter((a: any) => a.status === 'disponivel').length} disponíveis ·{' '}
             {(aparelhos ?? []).length} total
           </p>
@@ -37,7 +37,7 @@ export default async function EstoquePage() {
         {usuario.perfil !== 'vendedor' && (
           <Link
             href="/estoque/novo"
-            className="flex items-center gap-2 px-4 py-2 bg-[#4f7eff] hover:opacity-90 text-white text-sm font-semibold rounded-xl transition-opacity"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#4f7eff] hover:opacity-90 text-white text-sm font-medium rounded-xl transition-opacity"
           >
             <Plus size={15} />Cadastrar aparelho
           </Link>
