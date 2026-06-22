@@ -290,9 +290,9 @@ async function AdminDashboard({ lojaId, nome, searchParams }: { lojaId: string; 
       .select('id, nome, iniciais, comissao_pct, meta_mensal')
       .eq('loja_id', lojaId).eq('perfil', 'vendedor').eq('status', 'ativo'),
     supabase.from('lojas')
-      .select('meta_mensal')
+      .select('meta_mensal, whatsapp')
       .eq('id', lojaId)
-      .single<{ meta_mensal: number | null }>(),
+      .single<{ meta_mensal: number | null; whatsapp: string | null }>(),
   ])
 
   const vs = (vendasRes.data ?? []) as any[]
@@ -301,6 +301,7 @@ async function AdminDashboard({ lojaId, nome, searchParams }: { lojaId: string; 
   const aps_all = (aparelhosRes.data ?? []) as any[]
   const vends = (vendedoresRes.data ?? []) as any[]
   const lojaMeta = lojaRes.data?.meta_mensal ?? null
+  const lojaSemWhatsapp = !lojaRes.data?.whatsapp
 
   const aps = aps_all.filter((a: any) => a.status !== 'vendido')
   const vendidosCount = aps_all.filter((a: any) => a.status === 'vendido').length
@@ -426,6 +427,18 @@ async function AdminDashboard({ lojaId, nome, searchParams }: { lojaId: string; 
         <p className="text-[13px] font-medium" style={{ color: saude.color }}>{saude.label}</p>
         <p className="text-[12px]" style={{ color: 'var(--app-ink-secondary)' }}>{saude.msg}</p>
       </AnimatedPanel>
+
+      {lojaSemWhatsapp && (
+        <div className="rounded-2xl px-4 py-3 mb-3.5 flex items-center justify-between gap-3 flex-wrap"
+          style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)' }}>
+          <p className="text-[13px]" style={{ color: 'var(--app-ink-primary)' }}>
+            Falta o WhatsApp da sua loja — sem isso a gente não consegue te chamar se precisar.
+          </p>
+          <Link href="/configuracoes" className="text-[13px] font-medium flex-shrink-0" style={{ color: '#fbbf24' }}>
+            Completar agora →
+          </Link>
+        </div>
+      )}
 
       <InsightBanner alertas={alertas} />
 

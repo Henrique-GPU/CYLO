@@ -13,12 +13,15 @@ export async function cadastrar(formData: FormData): Promise<{ error: string } |
   const nomeLoja = (formData.get('nome_loja') as string)?.trim()
   const email = (formData.get('email') as string)?.trim().toLowerCase()
   const senha = formData.get('senha') as string
+  const whatsapp = (formData.get('whatsapp') as string)?.trim()
   const nomeAdmin = email?.split('@')[0] ?? nomeLoja
 
-  if (!nomeLoja || !email || !senha)
+  if (!nomeLoja || !email || !senha || !whatsapp)
     return { error: 'Preencha todos os campos obrigatórios.' }
   if (senha.length < 8)
     return { error: 'A senha deve ter no mínimo 8 caracteres.' }
+  if (whatsapp.replace(/\D/g, '').length < 10)
+    return { error: 'Informe um WhatsApp válido com DDD.' }
 
   // Atribuição de marketing (UTM/gclid) salva no cadastro
   let attrib: Record<string, string> = {}
@@ -42,6 +45,7 @@ export async function cadastrar(formData: FormData): Promise<{ error: string } |
     .insert({
       nome: nomeLoja,
       responsavel: nomeAdmin,
+      whatsapp,
       cor_primaria: '#4f7eff',
       cor_secundaria: '#0e1018',
       status_saas: 'trial',

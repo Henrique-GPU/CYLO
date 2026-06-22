@@ -59,6 +59,21 @@ export default function CadastroPage() {
 
           <div>
             <label className="block text-[10px] font-semibold text-white/40 uppercase tracking-wider mb-1.5">
+              WhatsApp
+            </label>
+            <input
+              name="whatsapp"
+              type="tel"
+              required
+              placeholder="(11) 99999-0000"
+              autoComplete="tel"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 outline-none focus:border-[#4f7eff] transition-colors"
+            />
+            <p className="text-[11px] text-white/25 mt-1.5">Usamos só pra te ajudar no início, sem spam.</p>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-semibold text-white/40 uppercase tracking-wider mb-1.5">
               E-mail
             </label>
             <input
