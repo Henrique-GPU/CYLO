@@ -1,7 +1,7 @@
 'use client'
 import { useEffect } from 'react'
 
-const FIELDS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid'] as const
+const FIELDS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid'] as const
 
 function getCookie(name: string) {
   return document.cookie.split('; ').find(c => c.startsWith(name + '='))?.split('=')[1]

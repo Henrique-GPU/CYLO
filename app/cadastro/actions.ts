@@ -3,7 +3,8 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
+import { sendMetaConversionEvent } from '@/lib/meta/conversions-api'
 
 function iniciais(nome: string): string {
   return nome.trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase()
@@ -93,6 +94,7 @@ export async function cadastrar(formData: FormData): Promise<{ error: string } |
     utm_content: attrib.utm_content ?? null,
     utm_term: attrib.utm_term ?? null,
     gclid: attrib.gclid ?? null,
+    fbclid: attrib.fbclid ?? null,
   })
 
   if (erroUsuario) {
@@ -104,6 +106,24 @@ export async function cadastrar(formData: FormData): Promise<{ error: string } |
   // 4. Fazer login automático
   const supabase = await createClient()
   await supabase.auth.signInWithPassword({ email, password: senha })
+
+  // Conversão server-side pra Meta Ads (Conversions API) — inerte sem token configurado
+  try {
+    const cookieStore = await cookies()
+    const headerStore = await headers()
+    await sendMetaConversionEvent({
+      eventName: 'CompleteRegistration',
+      email,
+      phone: whatsapp,
+      fbc: attrib.fbclid ? `fb.1.${Date.now()}.${attrib.fbclid}` : null,
+      fbp: cookieStore.get('_fbp')?.value ?? null,
+      clientIp: headerStore.get('x-forwarded-for') ?? null,
+      userAgent: headerStore.get('user-agent') ?? null,
+      sourceUrl: 'https://www.cyloapp.com.br/cadastro',
+    })
+  } catch (err) {
+    console.error('[cadastrar] erro ao enviar evento Meta CAPI:', err)
+  }
 
   redirect('/dashboard?novo=1')
 }
