@@ -39,7 +39,7 @@ export default function CadastroPage() {
 
         <div className="mb-7">
           <h1 className="text-2xl font-black text-white mb-1.5">Criar sua conta</h1>
-          <p className="text-sm text-white/40">15 dias grátis · Sem cartão de crédito</p>
+          <p className="text-sm text-white/40">7 dias grátis para testar</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -118,7 +118,7 @@ export default function CadastroPage() {
 
         <div className="mt-6 text-center space-y-2">
           <p className="text-xs text-white/20">
-            Sem cartão · Sem fidelidade · Cancela quando quiser
+            Sem fidelidade · Cancela quando quiser
           </p>
           <p className="text-sm text-white/40 mt-3">
             Já tem conta?{' '}

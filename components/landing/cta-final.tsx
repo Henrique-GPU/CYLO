@@ -25,7 +25,7 @@ export default function CtaFinal() {
         >
           Criar conta grátis →
         </Link>
-        <p className="text-white/30 text-sm mt-5">15 dias grátis · sem cartão · começa em 1 minuto</p>
+        <p className="text-white/30 text-sm mt-5">7 dias grátis · começa em 1 minuto</p>
       </motion.div>
     </section>
   )

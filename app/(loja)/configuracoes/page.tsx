@@ -2,8 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import TrocarSenhaForm from './trocar-senha-form'
 import EditarMinhaLojaForm from './editar-loja-form'
-
-const FOUNDER_WA = '5511932652082'
+import CancelarAssinaturaButton from './cancelar-assinatura-button'
+import Link from 'next/link'
 
 export default async function ConfiguracoesPage() {
   const supabase = await createClient()
@@ -24,15 +24,24 @@ export default async function ConfiguracoesPage() {
 
   const isAdmin = usuario.perfil === 'loja_admin'
 
-  // Calcula dias restantes do trial
-  let diasRestantes: number | null = null
-  if (loja.status_saas === 'trial' && loja.data_fim_trial) {
-    const diff = new Date(loja.data_fim_trial).getTime() - new Date().getTime()
-    diasRestantes = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
-  }
+  const { data: ass } = await supabase
+    .from('assinaturas')
+    .select('status, trial_ate, pago_ate')
+    .eq('loja_id', usuario.loja_id)
+    .single<{ status: 'trial' | 'ativa' | 'inadimplente' | 'cancelada'; trial_ate: string; pago_ate: string | null }>()
 
-  const waMsg = encodeURIComponent(`Olá! Quero ativar o plano da minha loja ${loja.nome} no Cylo.`)
-  const waLink = `https://wa.me/${FOUNDER_WA}?text=${waMsg}`
+  const fmt = (iso: string | null | undefined) =>
+    iso ? new Date(iso).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : null
+  const diasTrial = ass?.status === 'trial'
+    ? Math.max(0, Math.ceil((new Date(ass.trial_ate).getTime() - Date.now()) / 86400000))
+    : null
+
+  const badge: Record<string, { texto: string; cls: string }> = {
+    trial: { texto: 'Teste grátis', cls: 'bg-amber-500/15 text-amber-400' },
+    ativa: { texto: 'Ativa', cls: 'bg-emerald-500/15 text-emerald-400' },
+    inadimplente: { texto: 'Pagamento pendente', cls: 'bg-red-500/15 text-red-400' },
+    cancelada: { texto: 'Cancelada', cls: 'bg-white/10 text-white/50' },
+  }
 
   return (
     <div className="p-6 max-w-2xl space-y-6">
@@ -43,54 +52,57 @@ export default async function ConfiguracoesPage() {
         </p>
       </div>
 
-      {/* Card de plano — só para admin */}
-      {isAdmin && (
+      {/* Assinatura — só para admin */}
+      {isAdmin && ass && (
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-white/30 mb-3">Plano</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-white/30 mb-3">Assinatura</p>
           <div className="bg-white/4 border border-white/10 rounded-2xl p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-white font-bold text-sm">Plano Cylo</span>
-                  {loja.status_saas === 'trial' && (
-                    <span className="text-[10px] bg-amber-500/15 text-amber-400 font-bold px-2 py-0.5 rounded-full">Trial</span>
-                  )}
-                  {loja.status_saas === 'ativo' && (
-                    <span className="text-[10px] bg-emerald-500/15 text-emerald-400 font-bold px-2 py-0.5 rounded-full">Ativo</span>
-                  )}
+                  <span className="text-white font-bold text-sm">Plano CYLO</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badge[ass.status].cls}`}>
+                    {badge[ass.status].texto}
+                  </span>
                 </div>
-                {loja.status_saas === 'trial' && diasRestantes !== null && (
+                {ass.status === 'trial' && diasTrial !== null && (
                   <p className="text-white/40 text-xs">
-                    {diasRestantes > 0
-                      ? `${diasRestantes} dia${diasRestantes !== 1 ? 's' : ''} restante${diasRestantes !== 1 ? 's' : ''} no trial`
-                      : 'Trial encerrado'}
+                    {diasTrial > 0
+                      ? `${diasTrial} dia${diasTrial !== 1 ? 's' : ''} restante${diasTrial !== 1 ? 's' : ''} no teste grátis`
+                      : 'Teste grátis encerrado'}
                   </p>
                 )}
-                {loja.status_saas === 'ativo' && loja.proximo_vencimento && (
+                {ass.status === 'ativa' && ass.pago_ate && (
+                  <p className="text-white/40 text-xs">Próxima cobrança: {fmt(ass.pago_ate)}</p>
+                )}
+                {ass.status === 'inadimplente' && (
+                  <p className="text-white/40 text-xs">Não conseguimos cobrar seu cartão.</p>
+                )}
+                {ass.status === 'cancelada' && (
                   <p className="text-white/40 text-xs">
-                    Próximo vencimento: {new Date(loja.proximo_vencimento).toLocaleDateString('pt-BR')}
+                    {ass.pago_ate && new Date(ass.pago_ate) > new Date()
+                      ? `Acesso até ${fmt(ass.pago_ate)}`
+                      : 'Acesso encerrado'}
                   </p>
                 )}
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-white font-black text-xl leading-none">R$59<span className="text-white/50 text-sm font-medium">,99</span></p>
-                <p className="text-white/30 text-[10px] mt-0.5">/mês</p>
+                <p className="text-white font-black text-xl leading-none">R$59<span className="text-white/50 text-sm font-medium">,90</span></p>
+                <p className="text-white/30 text-[10px] mt-0.5">/mês no cartão</p>
               </div>
             </div>
 
-            {loja.status_saas === 'trial' && (
-              <a
-                href={waLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 w-full py-2.5 bg-[#4f7eff]/10 hover:bg-[#4f7eff]/20 border border-[#4f7eff]/20 text-[#4f7eff] text-xs font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+            {(ass.status === 'trial' || ass.status === 'inadimplente' || ass.status === 'cancelada') && (
+              <Link
+                href="/assinar"
+                className="mt-4 w-full py-2.5 bg-[#4f7eff]/10 hover:bg-[#4f7eff]/20 border border-[#4f7eff]/20 text-[#4f7eff] text-xs font-semibold rounded-xl transition-colors flex items-center justify-center"
               >
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                  <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.122 1.532 5.855L.073 23.927a.5.5 0 0 0 .612.612l6.072-1.459A11.938 11.938 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.927 0-3.732-.518-5.284-1.42l-.378-.223-3.924.943.943-3.924-.223-.378A9.938 9.938 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
-                </svg>
-                Ativar plano via WhatsApp
-              </a>
+                {ass.status === 'inadimplente' ? 'Atualizar pagamento' : ass.status === 'cancelada' ? 'Assinar novamente' : 'Assinar com cartão'}
+              </Link>
+            )}
+
+            {(ass.status === 'ativa' || ass.status === 'inadimplente') && (
+              <CancelarAssinaturaButton acessoAte={fmt(ass.pago_ate)} />
             )}
           </div>
         </div>

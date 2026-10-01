@@ -368,12 +368,12 @@ export default function NovaLojaForm() {
             {statusSaas === 'trial' && (
               <div>
                 <label className="label">Dias de trial</label>
-                <input type="number" name="dias_trial" defaultValue="14" min="1" max="90" className="inp" />
+                <input type="number" name="dias_trial" defaultValue="7" min="1" max="90" className="inp" />
               </div>
             )}
             <div>
               <label className="label">Valor mensal (R$)</label>
-              <input type="number" name="valor_mensal" defaultValue="99.90" step="0.01" className="inp" />
+              <input type="number" name="valor_mensal" defaultValue="59.90" step="0.01" className="inp" />
             </div>
           </div>
         </div>
