@@ -154,6 +154,9 @@ export async function POST(req: Request) {
         if (ass.status === 'ativa' || ass.status === 'inadimplente') {
           patch = { status: 'cancelada' }
           detalhe = 'assinatura cancelada'
+        } else if (ass.status === 'cancelada') {
+          detalhe = 'assinatura cancelada' // já cancelada pelo app; só garante o espelho
+          await espelharNaLoja(admin, ass.loja_id, { status: 'cancelada', pago_ate: ass.pago_ate })
         }
         break
       case 'PAYMENT_CREDIT_CARD_CAPTURE_REFUSED':

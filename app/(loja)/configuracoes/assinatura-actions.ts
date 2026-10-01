@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AsaasError, cancelarAssinaturaAsaas } from '@/lib/asaas'
+import { espelharNaLoja } from '@/lib/assinatura-sync'
 
 // Cancela a assinatura no Asaas. O acesso segue até pago_ate (fim do período já pago).
 export async function cancelarAssinatura(): Promise<{ error: string } | { ok: true }> {
@@ -45,6 +46,7 @@ export async function cancelarAssinatura(): Promise<{ error: string } | { ok: tr
     .from('assinaturas')
     .update({ status: 'cancelada', atualizado_em: new Date().toISOString() })
     .eq('loja_id', usuario.loja_id)
+  await espelharNaLoja(admin, usuario.loja_id, { status: 'cancelada' })
 
   revalidatePath('/configuracoes')
   return { ok: true }
