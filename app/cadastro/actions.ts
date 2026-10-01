@@ -6,6 +6,9 @@ import { redirect } from 'next/navigation'
 import { cookies, headers } from 'next/headers'
 import { sendMetaConversionEvent } from '@/lib/meta/conversions-api'
 
+// Dias de uso gratuito antes de pedir o cartão
+const DIAS_TRIAL = 7
+
 function iniciais(nome: string): string {
   return nome.trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase()
 }
@@ -38,7 +41,7 @@ export async function cadastrar(formData: FormData): Promise<{ error: string } |
 
   const agora = new Date()
   const fimTrial = new Date(agora)
-  fimTrial.setDate(fimTrial.getDate() + 15)
+  fimTrial.setDate(fimTrial.getDate() + DIAS_TRIAL)
 
   // 1. Criar loja em trial
   const { data: loja, error: erroLoja } = await admin
@@ -60,6 +63,19 @@ export async function cadastrar(formData: FormData): Promise<{ error: string } |
 
   if (erroLoja || !loja) {
     console.error('[cadastrar] erro ao criar loja:', erroLoja)
+    return { error: 'Erro ao criar loja.' }
+  }
+
+  // 1b. Criar assinatura em trial (cobrança automática via Asaas)
+  const { error: erroAssinatura } = await admin.from('assinaturas').insert({
+    loja_id: loja.id,
+    status: 'trial',
+    trial_ate: fimTrial.toISOString(),
+  })
+
+  if (erroAssinatura) {
+    console.error('[cadastrar] erro ao criar assinatura:', erroAssinatura)
+    await admin.from('lojas').delete().eq('id', loja.id)
     return { error: 'Erro ao criar loja.' }
   }
 
