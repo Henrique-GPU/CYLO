@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { aplicarStatusManual } from '@/lib/assinatura-sync'
 
 async function assertCeo() {
   const supabase = await createClient()
@@ -58,6 +59,12 @@ export async function salvarLojaCompleta(lojaId: string, formData: FormData) {
 
   const { error: erroLoja } = await admin.from('lojas').update(lojaUpdate).eq('id', lojaId)
   if (erroLoja) return { error: erroLoja.message }
+
+  await aplicarStatusManual(admin, lojaId, {
+    status_saas: lojaUpdate.status_saas as string | undefined,
+    data_fim_trial: lojaUpdate.data_fim_trial as string | null,
+    proximo_vencimento: lojaUpdate.proximo_vencimento as string | null,
+  })
 
   // Admin user fields
   const nomeAdmin = (formData.get('nome_admin') as string || '').trim()
@@ -158,6 +165,7 @@ export async function ativarLoja(lojaId: string) {
     status_saas: 'ativo',
     proximo_vencimento: proxVenc.toISOString().split('T')[0],
   }).eq('id', lojaId)
+  await aplicarStatusManual(admin, lojaId, { status_saas: 'ativo', proximo_vencimento: proxVenc.toISOString().split('T')[0] })
   revalidatePath('/dashboard')
 }
 
@@ -173,6 +181,7 @@ export async function renovarLoja(lojaId: string) {
     status_saas: 'ativo',
     proximo_vencimento: base.toISOString().split('T')[0],
   }).eq('id', lojaId)
+  await aplicarStatusManual(admin, lojaId, { status_saas: 'ativo', proximo_vencimento: base.toISOString().split('T')[0] })
   revalidatePath('/dashboard')
 }
 
@@ -184,5 +193,6 @@ export async function converterTrial(lojaId: string) {
     status_saas: 'ativo',
     proximo_vencimento: proxVenc.toISOString().split('T')[0],
   }).eq('id', lojaId)
+  await aplicarStatusManual(admin, lojaId, { status_saas: 'ativo', proximo_vencimento: proxVenc.toISOString().split('T')[0] })
   revalidatePath('/dashboard')
 }

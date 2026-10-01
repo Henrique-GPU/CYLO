@@ -10,6 +10,7 @@ export interface NavItem {
 const CEO_NAV: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: 'LayoutGrid', section: 'Plataforma' },
   { label: 'Lojas', href: '/lojas', icon: 'Store' },
+  { label: 'Cobranças', href: '/cobrancas', icon: 'CreditCard' },
 ]
 
 const ADMIN_NAV: NavItem[] = [

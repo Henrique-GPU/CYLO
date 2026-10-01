@@ -9,7 +9,17 @@ export class AsaasError extends Error {
 // Chaves do Asaas começam com $. O .env do Next expande $, então a chave pode vir sem ele.
 function chaveApi(): string {
   const k = process.env.ASAAS_API_KEY ?? ''
-  return k.startsWith('$') ? k : '$' + k
+  const chave = k.startsWith('$') ? k : '$' + k
+
+  // Trava de ambiente: em produção na Vercel só vale a API real do Asaas. Com sandbox
+  // configurado por engano, qualquer cartão de teste "pagaria" — então falha fechado.
+  if (process.env.VERCEL_ENV === 'production') {
+    const url = process.env.ASAAS_API_URL ?? ''
+    if (url !== 'https://api.asaas.com/v3' || !chave.startsWith('$aact_prod_')) {
+      throw new Error('Asaas: produção exige ASAAS_API_URL=https://api.asaas.com/v3 e chave aact_prod_')
+    }
+  }
+  return chave
 }
 
 export async function asaas<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -116,4 +126,42 @@ export async function buscarFatura(
     if (i < tentativas - 1) await new Promise(res => setTimeout(res, 800))
   }
   return null
+}
+
+interface PagamentoAsaas {
+  id: string
+  status: string
+  value: number
+  billingType: string
+  subscription: string | null
+  dueDate: string
+}
+
+// Confere NA API do Asaas que o pagamento existe, está pago, é desta assinatura, no cartão
+// e com o valor do plano. Um webhook forjado (ou um evento do sandbox) não passa aqui.
+export async function verificarPagamentoPago(
+  paymentId: string | undefined,
+  subscriptionId: string | null,
+): Promise<{ ok: true; dueDate: string } | { ok: false; motivo: string }> {
+  if (!paymentId) return { ok: false, motivo: 'evento sem payment.id' }
+  if (!subscriptionId) return { ok: false, motivo: 'loja sem assinatura registrada' }
+
+  // Só para simulações locais; ignorado em produção na Vercel
+  if (process.env.VERCEL_ENV !== 'production' && process.env.ASAAS_SKIP_VERIFY === '1') {
+    return { ok: true, dueDate: new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) }
+  }
+
+  let p: PagamentoAsaas
+  try {
+    p = await asaas<PagamentoAsaas>(`/payments/${encodeURIComponent(paymentId)}`)
+  } catch (e) {
+    // 404: o pagamento não existe neste ambiente (evento forjado ou de outro ambiente)
+    if (e instanceof AsaasError && e.status === 404) return { ok: false, motivo: 'pagamento inexistente no Asaas' }
+    throw e
+  }
+  if (!['RECEIVED', 'CONFIRMED'].includes(p.status)) return { ok: false, motivo: `status ${p.status}` }
+  if (p.subscription !== subscriptionId) return { ok: false, motivo: 'pagamento de outra assinatura' }
+  if (p.billingType !== 'CREDIT_CARD') return { ok: false, motivo: `forma ${p.billingType}` }
+  if (p.value < VALOR_PLANO - 0.001) return { ok: false, motivo: `valor ${p.value}` }
+  return { ok: true, dueDate: p.dueDate }
 }

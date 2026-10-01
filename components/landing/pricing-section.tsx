@@ -38,7 +38,7 @@ export default function PricingSection() {
           <div className="relative bg-white border border-gray-100 rounded-[28px] p-9 shadow-2xl shadow-[#4f7eff]/10">
             <div className="inline-flex items-center gap-2 bg-[#4f7eff]/8 rounded-full px-4 py-1.5 mb-7">
               <span className="w-1.5 h-1.5 rounded-full bg-[#4f7eff] animate-pulse" />
-              <span className="text-xs font-bold text-[#4f7eff] uppercase tracking-wider">15 dias grátis para começar</span>
+              <span className="text-xs font-bold text-[#4f7eff] uppercase tracking-wider">7 dias grátis para começar</span>
             </div>
 
             <div className="flex items-end gap-1 mb-1">
@@ -62,9 +62,9 @@ export default function PricingSection() {
               href="/cadastro"
               className="block w-full bg-[#4f7eff] hover:bg-[#3d6eef] text-white font-bold py-4 rounded-2xl text-base transition-all text-center shadow-lg shadow-[#4f7eff]/25 hover:shadow-xl hover:shadow-[#4f7eff]/30"
             >
-              Começar meus 15 dias grátis
+              Começar meus 7 dias grátis
             </Link>
-            <p className="text-xs text-gray-400 mt-3 text-center">Sem cartão de crédito</p>
+            <p className="text-xs text-gray-400 mt-3 text-center">Cancele quando quiser</p>
           </div>
         </motion.div>
       </div>

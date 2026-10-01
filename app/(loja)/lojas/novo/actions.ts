@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { aplicarStatusManual } from '@/lib/assinatura-sync'
 
 function gerarSenha(): string {
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
@@ -47,8 +48,8 @@ export async function criarLoja(formData: FormData) {
   const endereco      = formData.get('endereco') as string || null
   const corPrimaria   = formData.get('cor_primaria') as string || '#4f7eff'
   const corSecundaria = formData.get('cor_secundaria') as string || '#0e1018'
-  const valorMensal   = parseFloat(formData.get('valor_mensal') as string) || 99.90
-  const diasTrial     = parseInt(formData.get('dias_trial') as string) || 14
+  const valorMensal   = parseFloat(formData.get('valor_mensal') as string) || 59.90
+  const diasTrial     = parseInt(formData.get('dias_trial') as string) || 7
   const statusSaas    = formData.get('status_saas') as string || 'trial'
   const nomeAdmin     = formData.get('nome_admin') as string
   const emailAdmin    = formData.get('email_admin') as string
@@ -76,6 +77,17 @@ export async function criarLoja(formData: FormData) {
 
   if (erroLoja || !loja) {
     return { error: 'Erro ao criar loja: ' + erroLoja?.message }
+  }
+
+  // Sem esta linha a loja nasceria travada (o acesso depende de assinaturas)
+  await aplicarStatusManual(admin, loja.id, {
+    status_saas: statusSaas,
+    data_fim_trial: fimTrial.toISOString().split('T')[0],
+    proximo_vencimento: proxVenc.toISOString().split('T')[0],
+  })
+  const { data: criada } = await admin.from('assinaturas').select('loja_id').eq('loja_id', loja.id).maybeSingle()
+  if (!criada) {
+    await admin.from('assinaturas').insert({ loja_id: loja.id, status: 'trial', trial_ate: fimTrial.toISOString() })
   }
 
   // Upload logo se enviada

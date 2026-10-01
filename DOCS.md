@@ -173,7 +173,7 @@ Cada cliente do Cylo é uma loja. Isolamento total por `id`.
 | `status_saas` | text | `trial` / `ativo` / `vencido` / `bloqueado` |
 | `valor_mensal` | numeric | Padrão: 59.99 |
 | `data_inicio_trial` | date | Início do trial |
-| `data_fim_trial` | date | Fim do trial (início + 15 dias) |
+| `data_fim_trial` | date | Fim do trial legado (início + 7 dias). O acesso hoje é decidido pela tabela `assinaturas` |
 | `proximo_vencimento` | date | Próximo pagamento |
 | `cor_primaria` | text | Hex da cor (white-label) — padrão `#4f7eff` |
 | `cor_secundaria` | text | Hex do fundo |
@@ -348,7 +348,7 @@ passa
 1. Usuário preenche: nome da loja, nome, email, senha (mín. 8 chars)
 2. `cadastrar()` em `app/cadastro/actions.ts`:
    - Valida campos
-   - Cria loja: `status_saas='trial'`, `data_fim_trial = hoje + 15 dias`
+   - Cria loja: `status_saas='trial'`, `data_fim_trial = hoje + 7 dias` e cria a linha em `assinaturas` (status `trial`, 7 dias)
    - `admin.auth.admin.createUser({ email_confirm: true })` — sem verificação de email
    - Insere `usuario` com `perfil='loja_admin'`
    - Login automático: `supabase.auth.signInWithPassword()`
@@ -523,3 +523,16 @@ Em Supabase → Authentication → URL Configuration:
 
 **Fundador:** Henrique (rico.goncalves97@hotmail.com)  
 **WhatsApp:** (11) 93265-2082 — `wa.me/5511932652082`
+
+---
+
+## Cobrança automática (Asaas)
+
+- **Regra de acesso:** tabela `assinaturas` (1 linha por loja) + função SQL `acesso_liberado(loja_id)`. Estados: `trial` (7 dias), `ativa`, `inadimplente` (3 dias de tolerância), `cancelada` (acesso até `pago_ate`). Só o service role escreve; usuários só leem a própria.
+- **Bloqueio:** `app/(loja)/layout.tsx` chama `acesso_liberado` e redireciona para `/assinar`. CEO nunca é bloqueado. Bloqueio manual do CEO (`lojas.status_saas = 'bloqueado'`) continua indo para `/bloqueado`.
+- **Assinar:** `/assinar` → server action `assinar()` (`app/assinar/actions.ts`) cria cliente + assinatura só cartão no Asaas e redireciona para a fatura hospedada. O CYLO nunca recebe dados de cartão. `/assinar/obrigado` espera o webhook marcar `ativa`.
+- **Webhook:** `app/api/webhooks/asaas/route.ts` (token em `asaas-access-token`, idempotente via `asaas_webhook_eventos`). Pagamentos são **conferidos na API do Asaas** antes de ativar (existe, pago, mesma assinatura, cartão, valor do plano) — evento forjado ou de outro ambiente não libera nada.
+- **Trava de ambiente:** em `VERCEL_ENV=production`, `lib/asaas.ts` exige `ASAAS_API_URL=https://api.asaas.com/v3` e chave `aact_prod_`; qualquer outra coisa falha fechado (sandbox aceita cartão de teste).
+- **Variáveis:** `ASAAS_API_URL`, `ASAAS_API_KEY`, `ASAAS_WEBHOOK_TOKEN`, `NEXT_PUBLIC_APP_URL` (https://www.cyloapp.com.br em produção; o domínio precisa estar cadastrado em Minha Conta > Informações no Asaas para o `successUrl`). No `.env.local` a chave vai SEM o `$` inicial (o Next expande `$`); `lib/asaas.ts` recoloca.
+- **Painel do CEO:** `/cobrancas` (assinando, em teste, cartão recusado, cancelaram, receita, atividade recente). Ações manuais do CEO (ativar/renovar/trial) são espelhadas em `assinaturas` por `lib/assinatura-sync.ts`; o webhook espelha de volta em `lojas.status_saas`.
+- **Migrations:** `migration_004_assinaturas.sql` (obrigatória), `migration_005_eventos_cobranca.sql` (opcional: registra a loja em cada evento para o painel).

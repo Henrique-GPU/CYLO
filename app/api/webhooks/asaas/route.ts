@@ -1,5 +1,7 @@
 import { timingSafeEqual } from 'node:crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { espelharNaLoja } from '@/lib/assinatura-sync'
+import { verificarPagamentoPago } from '@/lib/asaas'
 
 export const runtime = 'nodejs'
 
@@ -10,6 +12,7 @@ interface Assinatura {
   status: StatusAssinatura
   inadimplente_desde: string | null
   pago_ate: string | null
+  asaas_subscription_id: string | null
 }
 
 interface AsaasEvent {
@@ -29,6 +32,7 @@ interface AsaasEvent {
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const CAMPOS = 'loja_id, status, inadimplente_desde, pago_ate, asaas_subscription_id'
 
 function tokenValido(recebido: string | null): boolean {
   const esperado = process.env.ASAAS_WEBHOOK_TOKEN
@@ -73,6 +77,12 @@ export async function POST(req: Request) {
     return new Response('erro', { status: 500 }) // o Asaas reenvia
   }
 
+  // Registro para o painel do CEO (loja afetada + resultado). Não pode derrubar o webhook:
+  // se as colunas ainda não existirem, só ignora.
+  const anotar = async (lojaId: string | null, detalhe: string) => {
+    await admin.from('asaas_webhook_eventos').update({ loja_id: lojaId, detalhe }).eq('evento_id', eventoId).then(() => {}, () => {})
+  }
+
   try {
     // 3. Localizar a loja: asaas_subscription_id, com externalReference como alternativa
     const subscriptionId = body.payment?.subscription ?? body.subscription?.id ?? null
@@ -80,24 +90,17 @@ export async function POST(req: Request) {
 
     let ass: Assinatura | null = null
     if (subscriptionId) {
-      const { data } = await admin
-        .from('assinaturas')
-        .select('loja_id, status, inadimplente_desde, pago_ate')
-        .eq('asaas_subscription_id', subscriptionId)
-        .maybeSingle<Assinatura>()
+      const { data } = await admin.from('assinaturas').select(CAMPOS).eq('asaas_subscription_id', subscriptionId).maybeSingle<Assinatura>()
       ass = data
     }
     if (!ass && externalRef && UUID.test(externalRef)) {
-      const { data } = await admin
-        .from('assinaturas')
-        .select('loja_id, status, inadimplente_desde, pago_ate')
-        .eq('loja_id', externalRef)
-        .maybeSingle<Assinatura>()
+      const { data } = await admin.from('assinaturas').select(CAMPOS).eq('loja_id', externalRef).maybeSingle<Assinatura>()
       ass = data
     }
 
     if (!ass) {
       console.log(`[asaas-webhook] ${tipo} ${eventoId}: loja não encontrada (sub=${subscriptionId}, ref=${externalRef})`)
+      await anotar(null, 'loja não encontrada')
       return new Response('ok')
     }
 
@@ -106,32 +109,59 @@ export async function POST(req: Request) {
     // 4. Regras de status
     const agora = new Date().toISOString()
     let patch: Record<string, unknown> | null = null
+    let detalhe = 'ignorado'
 
     switch (tipo) {
       case 'PAYMENT_CONFIRMED':
       case 'PAYMENT_RECEIVED': {
-        const novoPagoAte = mesSeguinte(body.payment?.dueDate)
+        // Nunca confia só no corpo do webhook: confere o pagamento na API do Asaas
+        const v = await verificarPagamentoPago(body.payment?.id, ass.asaas_subscription_id)
+        if (!v.ok) {
+          console.warn(`[asaas-webhook] ${tipo} ${eventoId} loja=${ass.loja_id} NÃO verificado: ${v.motivo}`)
+          detalhe = `pagamento não verificado (${v.motivo})`
+          break
+        }
+        const novoPagoAte = mesSeguinte(v.dueDate)
         // pago_ate só avança (CONFIRMED e RECEIVED chegam os dois para o mesmo pagamento)
         const pagoAte = ass.pago_ate && ass.pago_ate > novoPagoAte ? ass.pago_ate : novoPagoAte
-        patch = ass.status === 'cancelada'
-          ? { pago_ate: pagoAte } // assinatura cancelada não reativa por pagamento atrasado
-          : { status: 'ativa', inadimplente_desde: null, pago_ate: pagoAte }
+        if (ass.status === 'cancelada') {
+          patch = { pago_ate: pagoAte } // assinatura cancelada não reativa por pagamento atrasado
+          detalhe = 'pagamento em assinatura cancelada (sem reativar)'
+        } else {
+          patch = { status: 'ativa', inadimplente_desde: null, pago_ate: pagoAte }
+          detalhe = 'pagamento confirmado'
+        }
         break
       }
       case 'PAYMENT_OVERDUE':
         // Só quem já pagou entra em inadimplência; a 1ª fatura vencida de quem nunca pagou
         // não pode dar 3 dias extras além do trial.
-        if (ass.status === 'ativa') patch = { status: 'inadimplente', inadimplente_desde: agora }
+        if (ass.status === 'ativa') {
+          patch = { status: 'inadimplente', inadimplente_desde: agora }
+          detalhe = 'cobrança vencida / cartão recusado'
+        }
         break
       case 'PAYMENT_REFUNDED':
       case 'PAYMENT_CHARGEBACK_REQUESTED':
-        if (ass.status === 'ativa' || ass.status === 'trial')
+        if (ass.status === 'ativa' || ass.status === 'trial') {
           patch = { status: 'inadimplente', inadimplente_desde: agora }
+          detalhe = tipo === 'PAYMENT_REFUNDED' ? 'pagamento estornado' : 'chargeback solicitado'
+        }
         break
       case 'SUBSCRIPTION_DELETED':
       case 'SUBSCRIPTION_INACTIVATED':
         // Quem nunca pagou segue no trial; quem pagou mantém acesso até pago_ate
-        if (ass.status === 'ativa' || ass.status === 'inadimplente') patch = { status: 'cancelada' }
+        if (ass.status === 'ativa' || ass.status === 'inadimplente') {
+          patch = { status: 'cancelada' }
+          detalhe = 'assinatura cancelada'
+        }
+        break
+      case 'PAYMENT_CREDIT_CARD_CAPTURE_REFUSED':
+      case 'PAYMENT_REPROVED_BY_RISK_ANALYSIS':
+        // Cartão recusado: quem já assinava entra na tolerância de 3 dias a partir de agora.
+        // Quem ainda está no trial só fica registrado (a loja continua no teste).
+        detalhe = 'cartão recusado'
+        if (ass.status === 'ativa') patch = { status: 'inadimplente', inadimplente_desde: agora }
         break
       default:
         break // demais eventos: ignorar
@@ -143,7 +173,16 @@ export async function POST(req: Request) {
         .update({ ...patch, atualizado_em: agora })
         .eq('loja_id', ass.loja_id)
       if (error) throw error
+
+      const { data: nova } = await admin
+        .from('assinaturas')
+        .select('status, pago_ate')
+        .eq('loja_id', ass.loja_id)
+        .single<{ status: StatusAssinatura; pago_ate: string | null }>()
+      if (nova) await espelharNaLoja(admin, ass.loja_id, nova)
     }
+
+    await anotar(ass.loja_id, detalhe)
   } catch (e) {
     // Libera o evento para o reenvio do Asaas ser processado de novo
     console.error(`[asaas-webhook] erro ao processar ${tipo} ${eventoId}:`, e)

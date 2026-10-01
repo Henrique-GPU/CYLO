@@ -56,7 +56,7 @@ export default async function RootPage() {
             <div>
               <div className="inline-flex items-center gap-2 bg-[#4f7eff]/8 rounded-full px-4 py-1.5 mb-7">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#4f7eff] animate-pulse" />
-                <span className="text-xs font-bold text-[#4f7eff] uppercase tracking-wider">15 dias grátis · sem cartão</span>
+                <span className="text-xs font-bold text-[#4f7eff] uppercase tracking-wider">7 dias grátis</span>
               </div>
 
               <h1 className="text-[42px] sm:text-5xl lg:text-[56px] font-black tracking-tight leading-[1.05] mb-6 text-[#0f172a]">
@@ -83,7 +83,7 @@ export default async function RootPage() {
                   Ver demonstração
                 </a>
               </div>
-              <p className="text-sm text-gray-400 mt-4">15 dias grátis · sem cartão de crédito</p>
+              <p className="text-sm text-gray-400 mt-4">7 dias grátis para testar</p>
             </div>
 
             <HeroScene />

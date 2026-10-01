@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 const FAQS = [
   {
-    q: 'Preciso colocar cartão pra testar?',
-    a: 'Não. O teste de 15 dias é completamente livre, sem cartão de crédito.',
+    q: 'Como funciona o teste grátis?',
+    a: 'Você usa o CYLO por 7 dias sem pagar nada. Para continuar depois, a assinatura é de R$ 59,90 por mês, cobrada no cartão de crédito. Cancele quando quiser.',
   },
   {
     q: 'Meus dados ficam salvos se eu virar cliente?',
