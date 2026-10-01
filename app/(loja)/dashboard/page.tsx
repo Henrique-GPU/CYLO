@@ -123,13 +123,13 @@ async function CEODashboard() {
   const inativos = lojas?.filter(l => {
     if (!l.ultimo_acesso) return true
     const d = daysSince(l.ultimo_acesso.split('T')[0])
-    return d !== null && d > 15
+    return d !== null && d > 14
   }) ?? []
 
   const alertas = []
   if (trialVence3.length) alertas.push(`⏰ ${trialVence3.length} trial(s) vence(m) nos próximos 3 dias`)
   if (vencidos) alertas.push(`🚨 ${vencidos} cliente(s) com acesso vencido`)
-  if (inativos.length) alertas.push(`😴 ${inativos.length} loja(s) sem acesso há mais de 15 dias`)
+  if (inativos.length) alertas.push(`😴 ${inativos.length} loja(s) sem acesso há mais de 2 semanas`)
   if (bloqueados) alertas.push(`🔒 ${bloqueados} loja(s) bloqueada(s)`)
 
   const kpis = [
@@ -140,7 +140,7 @@ async function CEODashboard() {
     { v: String(bloqueados), l: 'Bloqueados', c: '#a78bfa' },
     { v: fmt(mrr), l: 'MRR Previsto', c: '#34d399' },
     { v: String(trialVence3.length), l: 'Trial → 3 dias', c: trialVence3.length > 0 ? '#fbbf24' : undefined },
-    { v: String(inativos.length), l: 'Inativos +15d', c: inativos.length > 0 ? '#f87171' : undefined },
+    { v: String(inativos.length), l: 'Inativos +2 sem.', c: inativos.length > 0 ? '#f87171' : undefined },
   ]
 
   return (
