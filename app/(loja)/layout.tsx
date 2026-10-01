@@ -1,6 +1,8 @@
 import Sidebar from '@/components/layout/sidebar'
 import BottomNav from '@/components/layout/bottom-nav'
+import AssinaturaBanner from '@/components/layout/assinatura-banner'
 import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import type { Perfil } from '@/types'
 
 export default async function LojaLayout({ children }: { children: React.ReactNode }) {
@@ -28,6 +30,28 @@ export default async function LojaLayout({ children }: { children: React.ReactNo
     loja = data ?? undefined
   }
 
+  // Bloqueio por assinatura. CEO e usuários sem loja nunca são bloqueados.
+  let assinatura: { status: 'trial' | 'ativa' | 'inadimplente' | 'cancelada'; trial_ate: string } | null = null
+  if (perfil !== 'ceo' && usuarioData?.loja_id) {
+    if (loja?.status_saas === 'bloqueado') redirect('/bloqueado') // bloqueio manual pelo CEO
+
+    const { data: liberado } = await supabase.rpc('acesso_liberado', { p_loja: usuarioData.loja_id })
+    if (!liberado) redirect('/assinar')
+
+    const { data } = await supabase
+      .from('assinaturas')
+      .select('status, trial_ate')
+      .eq('loja_id', usuarioData.loja_id)
+      .single<{ status: 'trial' | 'ativa' | 'inadimplente' | 'cancelada'; trial_ate: string }>()
+    assinatura = data
+
+    // A sidebar lê status/dias no formato antigo: alimenta com a assinatura real
+    if (loja && assinatura) {
+      loja.status_saas = { trial: 'trial', ativa: 'ativo', inadimplente: 'vencido', cancelada: 'vencido' }[assinatura.status]
+      loja.data_fim_trial = assinatura.trial_ate
+    }
+  }
+
   const usuario = usuarioData
     ? { nome: usuarioData.nome, iniciais: usuarioData.iniciais }
     : undefined
@@ -35,7 +59,10 @@ export default async function LojaLayout({ children }: { children: React.ReactNo
   return (
     <div className="flex h-screen bg-[#0e1018]">
       <Sidebar variant={perfil} loja={loja} usuario={usuario} />
-      <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">{children}</main>
+      <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">
+        {assinatura && <AssinaturaBanner status={assinatura.status} trialAte={assinatura.trial_ate} />}
+        {children}
+      </main>
       <BottomNav variant={perfil} />
     </div>
   )
