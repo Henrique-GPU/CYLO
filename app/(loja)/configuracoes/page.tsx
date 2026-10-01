@@ -5,6 +5,8 @@ import EditarMinhaLojaForm from './editar-loja-form'
 import CancelarAssinaturaButton from './cancelar-assinatura-button'
 import Link from 'next/link'
 
+const diasAte = (iso: string) => Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000))
+
 export default async function ConfiguracoesPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -32,9 +34,7 @@ export default async function ConfiguracoesPage() {
 
   const fmt = (iso: string | null | undefined) =>
     iso ? new Date(iso).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : null
-  const diasTrial = ass?.status === 'trial'
-    ? Math.max(0, Math.ceil((new Date(ass.trial_ate).getTime() - Date.now()) / 86400000))
-    : null
+  const diasTrial = ass?.status === 'trial' ? diasAte(ass.trial_ate) : null
 
   const badge: Record<string, { texto: string; cls: string }> = {
     trial: { texto: 'Teste grátis', cls: 'bg-amber-500/15 text-amber-400' },

@@ -5,6 +5,8 @@ interface Props {
   trialAte: string
 }
 
+const diasAte = (iso: string) => Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000))
+
 // Banner no topo do app: dias restantes do teste ou aviso de cobrança falha.
 export default function AssinaturaBanner({ status, trialAte }: Props) {
   if (status === 'inadimplente') {
@@ -22,7 +24,7 @@ export default function AssinaturaBanner({ status, trialAte }: Props) {
 
   if (status !== 'trial') return null
 
-  const dias = Math.max(0, Math.ceil((new Date(trialAte).getTime() - Date.now()) / 86400000))
+  const dias = diasAte(trialAte)
   const urgente = dias <= 3
   const texto = dias === 0
     ? 'Seu teste grátis termina hoje.'
