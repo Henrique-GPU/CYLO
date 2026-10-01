@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import AssinarForm from './assinar-form'
+import { waLink } from '@/lib/contato'
 
 const BENEFICIOS = [
   'Estoque por IMEI, sem limite de aparelhos',
@@ -95,6 +96,14 @@ export default async function AssinarPage() {
 
         <div className="mt-6 text-center space-y-3">
           <p className="text-[11px] text-white/25">Pagamento processado com segurança pelo Asaas. O CYLO não armazena dados do seu cartão.</p>
+          <a
+            href={waLink('Olá! Tenho uma dúvida sobre a assinatura do Cylo.')}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-xs text-[#25d366] hover:underline"
+          >
+            Dúvidas? Fale com a gente no WhatsApp
+          </a>
           {liberado ? (
             <Link href="/dashboard" className="inline-block text-sm text-white/40 hover:text-white/70 transition-colors">
               Voltar ao app

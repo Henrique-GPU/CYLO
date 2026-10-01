@@ -463,11 +463,11 @@ Exibida quando trial expira ou loja é manualmente bloqueada pelo CEO.
 
 - Detecta `status_saas` e exibe mensagem personalizada por estado
 - Card de preço: **R$59,99/mês** com lista de features incluídas
-- Botão WhatsApp verde — abre `wa.me/5511932652082` com mensagem pré-preenchida contendo nome da loja
+- Botão WhatsApp verde — abre `wa.me/5511958716450` com mensagem pré-preenchida contendo nome da loja
 - Botão "Sair da conta" sempre visível
 - CEO que acessa `/bloqueado` é redirecionado para `/dashboard` (CEO nunca bloqueia)
 
-**Contato fundador:** Henrique — (11) 93265-2082
+**Contato fundador:** Henrique — (11) 95871-6450
 
 ---
 
@@ -515,14 +515,14 @@ Em Supabase → Authentication → URL Configuration:
 | Usuário deslogado aleatoriamente | `updateSession` não está sendo chamado | Verificar `proxy.ts` chama `updateSession` |
 | Admin consegue criar outro admin | `perfil` sendo enviado pelo form | `funcionarios/novo/actions.ts` linha 32 — deve ser hardcoded `'vendedor'` |
 | Trial não bloqueia | `data_fim_trial` nulo ou formato errado | Verificar campo no banco — deve ser `YYYY-MM-DD` |
-| WhatsApp não abre mensagem pré-preenchida | Número errado ou texto não encodado | Número: `5511932652082`, usar `encodeURIComponent()` |
+| WhatsApp não abre mensagem pré-preenchida | Número errado ou texto não encodado | Número: `5511958716450`, usar `encodeURIComponent()` |
 
 ---
 
 ## Contato
 
 **Fundador:** Henrique (rico.goncalves97@hotmail.com)  
-**WhatsApp:** (11) 93265-2082 — `wa.me/5511932652082`
+**WhatsApp:** (11) 95871-6450 — `wa.me/5511958716450`
 
 ---
 

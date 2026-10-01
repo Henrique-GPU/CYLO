@@ -12,9 +12,9 @@ import { EstoqueMockup, VendaMockup, ComissaoMockup, RelatoriosMockup } from '@/
 import MetricsSection from '@/components/landing/metrics-section'
 import PricingSection from '@/components/landing/pricing-section'
 import CtaFinal from '@/components/landing/cta-final'
+import { waLink } from '@/lib/contato'
 
-const FOUNDER_WA = '5511932652082'
-const WA_LINK = `https://wa.me/${FOUNDER_WA}?text=${encodeURIComponent('Olá! Vi o Cylo e quero saber mais sobre como minha loja pode ter acesso.')}`
+const WA_LINK = waLink('Olá! Vi o Cylo e quero saber mais sobre como minha loja pode ter acesso.')
 
 export default async function RootPage() {
   const supabase = await createClient()

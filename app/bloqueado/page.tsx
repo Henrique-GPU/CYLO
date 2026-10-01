@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-
-const FOUNDER_WA = '5511932652082'
+import { waLink as montarWaLink } from '@/lib/contato'
 
 export default async function BloqueadoPage() {
   const supabase = await createClient()
@@ -20,11 +19,9 @@ export default async function BloqueadoPage() {
   const isBloqueado = loja?.status_saas === 'bloqueado'
   const primeiroNome = usuario?.nome?.split(' ')[0] ?? 'você'
 
-  const waMsg = isBloqueado
-    ? encodeURIComponent(`Olá! Minha conta ${loja?.nome ?? ''} no Cylo foi bloqueada e preciso regularizar o acesso.`)
-    : encodeURIComponent(`Olá! O trial da minha loja ${loja?.nome ?? ''} no Cylo encerrou. Quero continuar usando e saber sobre os planos.`)
-
-  const waLink = `https://wa.me/${FOUNDER_WA}?text=${waMsg}`
+  const waLink = montarWaLink(isBloqueado
+    ? `Olá! Minha conta ${loja?.nome ?? ''} no Cylo foi bloqueada e preciso regularizar o acesso.`
+    : `Olá! O trial da minha loja ${loja?.nome ?? ''} no Cylo encerrou. Quero continuar usando e saber sobre os planos.`)
 
   return (
     <div className="min-h-screen bg-[#080a0f] flex flex-col items-center justify-center p-6 relative overflow-hidden">

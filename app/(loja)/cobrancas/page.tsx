@@ -39,20 +39,28 @@ const TIPO_EVENTO: Record<string, { texto: string; cor: string }> = {
   PAYMENT_CREATED: { texto: 'Cobrança gerada', cor: 'text-white/40' },
 }
 
-function Whats({ loja }: { loja: Loja }) {
+// O cadastro grava o prefixo do e-mail como responsável; só usa o nome se parecer um nome (2+ palavras)
+const saudacao = (loja: Loja) => {
+  const partes = (loja.responsavel ?? '').trim().split(/\s+/)
+  if (partes.length < 2 || /[0-9@._]/.test(partes[0])) return ''
+  return ', ' + partes[0].charAt(0).toUpperCase() + partes[0].slice(1).toLowerCase()
+}
+
+function Whats({ loja, msg }: { loja: Loja; msg?: string }) {
   const n = (loja.whatsapp ?? '').replace(/\D/g, '')
   if (n.length < 10) return <span className="text-white/20 text-xs">sem WhatsApp</span>
   const num = n.startsWith('55') ? n : `55${n}`
+  const href = `https://wa.me/${num}${msg ? `?text=${encodeURIComponent(msg)}` : ''}`
   return (
-    <a href={`https://wa.me/${num}`} target="_blank" rel="noopener noreferrer" className="text-[#25d366] hover:underline text-xs font-medium">
-      WhatsApp
+    <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#25d366] hover:underline text-xs font-medium whitespace-nowrap">
+      {msg ? 'Avisar no WhatsApp' : 'WhatsApp'}
     </a>
   )
 }
 
 function Grupo({ titulo, cor, vazio, linhas }: {
   titulo: string; cor: string; vazio: string
-  linhas: { loja: Loja; info: string }[]
+  linhas: { loja: Loja; info: string; msg?: string }[]
 }) {
   return (
     <div className="bg-white/4 border border-white/10 rounded-2xl overflow-hidden">
@@ -64,13 +72,13 @@ function Grupo({ titulo, cor, vazio, linhas }: {
         <p className="px-5 py-4 text-xs text-white/30">{vazio}</p>
       ) : (
         <div className="divide-y divide-white/5">
-          {linhas.map(({ loja, info }) => (
+          {linhas.map(({ loja, info, msg }) => (
             <div key={loja.id} className="px-5 py-3 flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-sm text-white font-medium truncate">{loja.nome}</p>
                 <p className="text-[11px] text-white/40 truncate">{loja.responsavel ?? '—'} · {info}</p>
               </div>
-              <Whats loja={loja} />
+              <Whats loja={loja} msg={msg} />
             </div>
           ))}
         </div>
@@ -106,10 +114,10 @@ export default async function CobrancasPage() {
   }
 
   const grupos = {
-    ativa: [] as { loja: Loja; info: string; ordem: number }[],
-    trial: [] as { loja: Loja; info: string; ordem: number }[],
-    inadimplente: [] as { loja: Loja; info: string; ordem: number }[],
-    cancelada: [] as { loja: Loja; info: string; ordem: number }[],
+    ativa: [] as { loja: Loja; info: string; ordem: number; msg?: string }[],
+    trial: [] as { loja: Loja; info: string; ordem: number; msg?: string }[],
+    inadimplente: [] as { loja: Loja; info: string; ordem: number; msg?: string }[],
+    cancelada: [] as { loja: Loja; info: string; ordem: number; msg?: string }[],
   }
   for (const loja of lojas) {
     const a = porLoja.get(loja.id)
@@ -122,6 +130,9 @@ export default async function CobrancasPage() {
         loja,
         info: d > 0 ? `teste termina em ${d} ${d === 1 ? 'dia' : 'dias'} (${dataBR(a.trial_ate)})` : `teste encerrado em ${dataBR(a.trial_ate)}`,
         ordem: d,
+        msg: d > 0
+          ? `Olá${saudacao(loja)}! Aqui é o Henrique, do CYLO. O teste grátis da ${loja.nome} termina em ${dataBR(a.trial_ate)}. A partir daí o CYLO passa a ter assinatura mensal de R$ 59,90, cobrada no cartão de crédito. Seus dados continuam todos salvos: é só assinar pela tela do app, no botão "Assinar". Qualquer dúvida é só me chamar aqui.`
+          : `Olá${saudacao(loja)}! Aqui é o Henrique, do CYLO. O teste grátis da ${loja.nome} terminou, mas seus dados continuam todos salvos. Para voltar a usar é só assinar pela tela do app (R$ 59,90/mês no cartão de crédito). Qualquer dúvida é só me chamar aqui.`,
       })
     } else if (a.status === 'inadimplente' && a.inadimplente_desde) {
       const trava = new Date(new Date(a.inadimplente_desde).getTime() + 3 * 864e5).toISOString()
@@ -129,12 +140,14 @@ export default async function CobrancasPage() {
         loja,
         info: `cartão recusado desde ${dataBR(a.inadimplente_desde)} · ${dias(trava) > 0 ? `trava em ${dataBR(trava)}` : 'já travada'}`,
         ordem: 0,
+        msg: `Olá${saudacao(loja)}! Aqui é o Henrique, do CYLO. Não conseguimos cobrar o cartão da assinatura da ${loja.nome}. Para não perder o acesso, é só atualizar o pagamento em cyloapp.com.br/assinar. Se precisar de ajuda, me chama aqui.`,
       })
     } else if (a.status === 'cancelada') {
       grupos.cancelada.push({
         loja,
         info: a.pago_ate && new Date(a.pago_ate) > new Date() ? `cancelou · acesso até ${dataBR(a.pago_ate)}` : 'cancelou · acesso encerrado',
         ordem: 0,
+        msg: `Olá${saudacao(loja)}! Aqui é o Henrique, do CYLO. Vi que a assinatura da ${loja.nome} foi cancelada. Aconteceu algum problema? Posso ajudar em alguma coisa?`,
       })
     }
   }
